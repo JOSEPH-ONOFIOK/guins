@@ -67,7 +67,7 @@ export function Casino() {
   const current = GAMES.find((g) => g.id === game)!;
 
   const start: GameProps["start"] = () => {
-    if (busy) return false;
+    if (busy || GAMES_LOCKED) return false;
     if (bet < MIN_BET) return setWarn(`Minimum bet is ${fmtTok(MIN_BET)}.`), false;
     if (bet > balance) return setWarn("Not enough chips for that bet. Lower it or top up."), false;
     setWarn(null);
@@ -93,9 +93,6 @@ export function Casino() {
 
   return (
     <div className="glass relative overflow-hidden !rounded-3xl">
-      {GAMES_LOCKED && <ChainLock />}
-      {/* Everything under the lock is out of reach: no clicks, no tabbing, hidden from screen readers */}
-      <div inert={GAMES_LOCKED} aria-hidden={GAMES_LOCKED || undefined}>
       {/* Balance bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-black/20 px-5 py-4 sm:px-7">
         <div>
@@ -145,8 +142,11 @@ export function Casino() {
       </div>
 
       {/* The table */}
-      <div className="felt mx-3 rounded-[22px] px-4 py-8 sm:mx-4 sm:px-8">
-        <Game bet={bet} busy={busy} start={start} settle={settle} />
+      <div className="felt relative mx-3 rounded-[22px] px-4 py-8 sm:mx-4 sm:px-8">
+        {GAMES_LOCKED && <ChainLock />}
+        {/* While locked the game shows but its buttons are off */}
+        <Game bet={bet} busy={busy || GAMES_LOCKED} start={start} settle={settle} />
+        {GAMES_LOCKED && <p className="sr-only">This game is coming soon. It can&apos;t be played yet.</p>}
         <div className="mt-5 min-h-14 text-center" aria-live="polite">
           {warn && <p className="pop-in font-mono text-sm text-flame">{warn}</p>}
           {flash && (
@@ -173,7 +173,7 @@ export function Casino() {
           {CHIPS.map((c) => (
             <button
               key={c}
-              disabled={busy}
+              disabled={busy || GAMES_LOCKED}
               onClick={() => setBet(c)}
               aria-label={`Bet ${fmtTok(c)}`}
               className={`casino-chip ${CHIP_COLOR[c]} ${bet === c ? "ring-2 ring-gold ring-offset-2 ring-offset-[#1a1236]" : ""}`}
@@ -181,9 +181,9 @@ export function Casino() {
               {fmtTok(c)}
             </button>
           ))}
-          <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setBet((b) => Math.max(MIN_BET, Math.floor(b / 2)))}>½</button>
-          <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => setBet((b) => Math.max(MIN_BET, Math.min(balance, b * 2)))}>2×</button>
-          <button className="btn btn-ghost btn-sm" disabled={busy || balance < MIN_BET} onClick={() => setBet(balance)}>Max</button>
+          <button className="btn btn-ghost btn-sm" disabled={busy || GAMES_LOCKED} onClick={() => setBet((b) => Math.max(MIN_BET, Math.floor(b / 2)))}>½</button>
+          <button className="btn btn-ghost btn-sm" disabled={busy || GAMES_LOCKED} onClick={() => setBet((b) => Math.max(MIN_BET, Math.min(balance, b * 2)))}>2×</button>
+          <button className="btn btn-ghost btn-sm" disabled={busy || GAMES_LOCKED || balance < MIN_BET} onClick={() => setBet(balance)}>Max</button>
         </div>
       </div>
 
@@ -201,7 +201,6 @@ export function Casino() {
           </ul>
         </div>
       )}
-      </div>
     </div>
   );
 }
