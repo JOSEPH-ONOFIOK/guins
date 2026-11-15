@@ -3,22 +3,18 @@
 import { useEffect, useRef } from "react";
 import { ColorWash } from "./ColorWash";
 
-// The living background: a glacier world under a sky that runs dawn → day →
-// sunset → night → aurora on a loop. While the sun is down the whole site goes
-// dark: this sets data-night on <html>, and globals.css swaps the colours., with penguins messing around in the snow.
+// The living background: a glacier world with penguins messing around in the snow,
+// under a night sky that drifts slowly between deep night, aurora and violet. It
+// sits behind a veil so the page stays calm.
 
-const CYCLE_MS = 48000;
+const CYCLE_MS = 90000;
 
 type Key = { t: number; top: string; mid: string; bot: string; shade: string; night: number };
 const KEYS: Key[] = [
-  { t: 0.0, top: "#9d9cf5", mid: "#f3b8e0", bot: "#ffe6d6", shade: "#fff0f6", night: 0.15 }, // pastel dawn
-  { t: 0.25, top: "#7fb4ff", mid: "#c3dcff", bot: "#f0f4ff", shade: "#ffffff", night: 0 }, // soft day
-  { t: 0.48, top: "#8a8cf0", mid: "#c9b6ff", bot: "#f6e2ff", shade: "#f4ecff", night: 0.2 }, // lilac
-  { t: 0.57, top: "#5a4b9e", mid: "#f08a8c", bot: "#ffc9a6", shade: "#ffd2c4", night: 0.35 }, // sunset
-  { t: 0.65, top: "#070a24", mid: "#141a4a", bot: "#28306e", shade: "#5560b0", night: 1 }, // night
-  { t: 0.78, top: "#041226", mid: "#0c2c52", bot: "#1d5682", shade: "#5a86c0", night: 1 }, // aurora night
-  { t: 0.86, top: "#3a3f8f", mid: "#8a7fd0", bot: "#e6b8d8", shade: "#e6d8f4", night: 0.45 }, // first light
-  { t: 1.0, top: "#9d9cf5", mid: "#f3b8e0", bot: "#ffe6d6", shade: "#fff0f6", night: 0.15 }, // pastel dawn
+  { t: 0.0, top: "#070a24", mid: "#141a4a", bot: "#28306e", shade: "#5560b0", night: 1 }, // deep night
+  { t: 0.33, top: "#041226", mid: "#0c2c52", bot: "#1d5682", shade: "#5a86c0", night: 1 }, // aurora
+  { t: 0.66, top: "#0d0828", mid: "#24164f", bot: "#3e2a7a", shade: "#6a5cb8", night: 1 }, // violet night
+  { t: 1.0, top: "#070a24", mid: "#141a4a", bot: "#28306e", shade: "#5560b0", night: 1 }, // deep night
 ];
 
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -115,32 +111,105 @@ const CLOUDS: { top: string; w: string; speed: number; delay: number; face: Face
   { top: "22%", w: "10rem", speed: 110, delay: 5, face: "sleepy" },
 ];
 
-export function Scene() {
+// ---------- The ice frame the hero looks out through ----------
+const INK = "#121212";
+
+// One snowy pine: three tiers, snow on each tip, a stubby trunk
+function Pine({ x, base, h }: { x: number; base: number; h: number }) {
+  return (
+    <g stroke={INK} strokeWidth="3" strokeLinejoin="round">
+      <rect x={x - h * 0.035} y={base - h * 0.08} width={h * 0.07} height={h * 0.08} fill="#6b4a32" />
+      {[0, 1, 2].map((i) => {
+        const top = base - h + i * h * 0.27;
+        const bot = top + h * 0.42;
+        const w = h * (0.17 + i * 0.075);
+        const k = (bot - top) * 0.42;
+        return (
+          <g key={i}>
+            <path d={`M${x},${top} L${x + w},${bot} Q${x},${bot + h * 0.05} ${x - w},${bot} Z`} fill={i % 2 ? "#2a7566" : "#2f8270"} />
+            <path d={`M${x},${top} L${x + w * 0.42},${top + k} L${x + w * 0.2},${top + k * 0.82} L${x + w * 0.05},${top + k * 1.05} L${x - w * 0.15},${top + k * 0.8} L${x - w * 0.42},${top + k} Z`} fill="#fff" strokeWidth="2.4" />
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+// Icicle lip along the top: thicker at the sides so the middle stays open sky
+const LIP = (() => {
+  const base = (x: number) => 64 + 70 * Math.pow(Math.abs(x - 800) / 800, 1.6) + 8 * Math.sin(x / 90);
+  let d = "M0,0 L1600,0";
+  for (let x = 1600; x >= 0; x -= 50) {
+    const len = 26 + 60 * Math.pow(Math.abs(x - 800) / 800, 1.3) + 14 * Math.sin(x * 1.7);
+    d += ` L${x},${base(x).toFixed(1)} L${x - 12},${(base(x - 12) + len).toFixed(1)} L${x - 25},${base(x - 25).toFixed(1)}`;
+  }
+  return `${d} L0,0 Z`;
+})();
+
+// Time-of-day tint over exactly the drawn shapes: the same --shade multiply the glacier uses
+const tint = { fill: "var(--shade)", mixBlendMode: "multiply" as const };
+
+function IceLip() {
+  return (
+    <svg viewBox="0 0 1600 220" preserveAspectRatio="xMidYMin slice" className="h-full w-full overflow-visible">
+      <defs>
+        <clipPath id="lip-clip">
+          <path d={LIP} />
+        </clipPath>
+      </defs>
+      <path d={LIP} fill="#dcefff" stroke={INK} strokeWidth="3.5" strokeLinejoin="round" />
+      <path d={LIP} fill="#f6fbff" transform="translate(0 -22)" />
+      <path d="M0,0 L1600,0 L1600,26 C1200,46 400,46 0,26 Z" fill="#ffffff" />
+      <rect x="0" y="0" width="1600" height="220" clipPath="url(#lip-clip)" style={tint} />
+    </svg>
+  );
+}
+
+function PineWall({ id }: { id: string }) {
+  const art = (
+    <>
+      <Pine x={70} base={1000} h={880} />
+      <Pine x={250} base={1010} h={560} />
+      <Pine x={355} base={1015} h={330} />
+      <path d="M-20,1010 L-20,905 C110,860 260,890 440,975 L440,1010 Z" fill="#fff" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+      <path d="M-20,1010 L-20,950 C140,925 300,950 440,1000 L440,1010 Z" fill="#e6f1fb" />
+    </>
+  );
+  return (
+    <svg viewBox="0 0 420 1000" preserveAspectRatio="xMinYMax meet" className="h-full w-auto overflow-visible">
+      <defs>
+        {/* The art's own silhouette, so the tint lands only on the trees and snow */}
+        <mask id={id} maskUnits="userSpaceOnUse" x="-40" y="0" width="520" height="1040" style={{ maskType: "alpha" }}>
+          {art}
+        </mask>
+      </defs>
+      {art}
+      <rect x="-40" y="0" width="520" height="1040" mask={`url(#${id})`} style={tint} />
+    </svg>
+  );
+}
+
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+// dark: keep the night veil whatever the theme (pages whose content is always dark)
+// calm: start already flown through and dimmed, no intro (pages that are all content)
+// moon: where the moon sways, as [centre, swing] across the sky (0 left … 1 right)
+export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32] }: { dark?: boolean; calm?: boolean; moon?: [number, number] }) {
+  const [moonC, moonSwing] = moonPath;
   const root = useRef<HTMLDivElement>(null);
-  const sun = useRef<HTMLDivElement>(null);
   const moon = useRef<HTMLDivElement>(null);
   const snow = useRef<HTMLCanvasElement>(null);
+  // Parallax layers, moved by the scroll fly-through
+  const lipRef = useRef<HTMLDivElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const farRef = useRef<SVGGElement>(null);
+  const midRef = useRef<SVGGElement>(null);
+  const frontRef = useRef<SVGGElement>(null);
 
-  // Day/night loop: writes CSS variables straight to the DOM each frame
+  // Night sky loop: writes CSS variables straight to the DOM each frame
   useEffect(() => {
     const el = root.current!;
-    const html = document.documentElement;
-    let night = false, fade = 0, first = true;
-    // Only touches the page when the sun actually crosses the horizon. Landing at
-    // night goes straight to dark; a sunset or sunrise you watch fades over a second.
-    const setNight = (on: boolean) => {
-      const was = first;
-      first = false;
-      if (on === night) return;
-      night = on;
-      if (!was) {
-        html.classList.add("theme-fade");
-        clearTimeout(fade);
-        fade = window.setTimeout(() => html.classList.remove("theme-fade"), 1100);
-      }
-      if (on) html.dataset.night = "";
-      else delete html.dataset.night;
-    };
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const start = performance.now() - CYCLE_MS * 0.2;
     let raf = 0;
@@ -156,38 +225,46 @@ export function Scene() {
       el.style.setProperty("--shade", mix(a.shade, b.shade, k));
       el.style.setProperty("--night", String(a.night + (b.night - a.night) * k));
 
-      // Sun rides 0.85 → 0.6 (wrapping through dawn), moon rides 0.55 → 0.95
-      const arc = (p: number, node: HTMLDivElement | null) => {
-        if (!node) return;
-        const on = p >= 0 && p <= 1;
-        node.style.opacity = on ? "1" : "0";
-        if (!on) return;
-        node.style.left = `${6 + p * 88}%`;
-        node.style.top = `${62 - Math.sin(Math.PI * p) * 52}%`;
-      };
-      const sunP = ((t + 0.15) % 1) / 0.75;
-      arc(sunP, sun.current);
-      setNight(sunP > 1);
-      arc((((t - 0.55) % 1) + 1) % 1 / 0.4, moon.current);
+      // The moon sways slowly back and forth across the upper sky
+      const m = moon.current;
+      if (m) {
+        const p = moonC + moonSwing * Math.sin(t * Math.PI * 2);
+        m.style.left = `${6 + p * 88}%`;
+        m.style.top = `${44 - Math.sin(Math.PI * p) * 30}%`;
+      }
     };
 
-    const cleanup = () => {
-      clearTimeout(fade);
-      html.classList.remove("theme-fade");
-      delete html.dataset.night;
-    };
-    // ?sky=0.7 freezes the loop at that point (0 dawn, 0.25 day, 0.57 sunset, 0.7 night), for previews
+    const cleanup = () => {};
+    // ?sky=0.4 freezes the loop at that point (0 deep night, 0.33 aurora, 0.66 violet), for previews
     const pinned = Number(new URLSearchParams(location.search).get("sky") ?? NaN);
-    if (pinned >= 0 && pinned < 1) {
-      paint(pinned);
-      return cleanup;
-    }
+    const isPinned = pinned >= 0 && pinned < 1;
+    // Scroll fly-through: the frame and foreground fly outward, far peaks barely move,
+    // and the veil fades in so the content below reads calmly.
+    const html = document.documentElement;
+    const set = (n: HTMLElement | SVGGElement | null, tf: string) => {
+      if (n) n.style.transform = tf;
+    };
+    const fly = () => {
+      const p = calm ? 1 : clamp01(window.scrollY / (window.innerHeight * 0.7));
+      html.style.setProperty("--intro", p.toFixed(4));
+      el.style.setProperty("--veil-o", clamp01((p - 0.15) / 0.7).toFixed(4));
+      set(lipRef.current, `translateY(${-p * 110}%) scale(${1 + p * 0.4})`);
+      set(leftRef.current, `translateX(${-p * 105}%) scale(${1 + p * 0.5})`);
+      set(rightRef.current, `translateX(${p * 105}%) scale(${1 + p * 0.5})`);
+      set(farRef.current, `translateY(${-p * 2}%) scale(${1 + p * 0.04})`);
+      set(midRef.current, `translateY(${p * 5}%) scale(${1 + p * 0.12})`);
+      set(frontRef.current, `translateY(${p * 30}%) scale(${1 + p * 0.5})`);
+    };
+
     if (still) {
       paint(0.3);
+      el.style.setProperty("--veil-o", "1");
+      if (calm) fly();
       return cleanup;
     }
     const tick = (now: number) => {
-      paint(((now - start) % CYCLE_MS) / CYCLE_MS);
+      paint(isPinned ? pinned : ((now - start) % CYCLE_MS) / CYCLE_MS);
+      fly();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -195,7 +272,7 @@ export function Scene() {
       cancelAnimationFrame(raf);
       cleanup();
     };
-  }, []);
+  }, [calm, moonC, moonSwing]);
 
   // Snowfall
   useEffect(() => {
@@ -236,6 +313,7 @@ export function Scene() {
   }, []);
 
   return (
+    <>
     <div ref={root} aria-hidden className="scene pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       {/* Sky */}
       <div className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--sky-top),var(--sky-mid)_55%,var(--sky-bot))]" />
@@ -251,9 +329,8 @@ export function Scene() {
         <div className="aurora absolute top-[4%] right-[-10%] h-[34%] w-[60%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(255,79,216,.4),transparent)] blur-2xl [animation-delay:-6s]" />
       </div>
 
-      {/* Sun and moon */}
-      <div ref={sun} style={{ opacity: 0 }} className="absolute h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[linear-gradient(to_bottom,#ffe27a,#ff7aa8_55%,#b44cff)] shadow-[0_0_90px_30px_rgba(255,79,216,.45)] [mask-image:repeating-linear-gradient(to_bottom,#000_0_62%,transparent_62%_70%,#000_70%_76%,transparent_76%_82%,#000_82%_86%,transparent_86%_92%,#000_92%)] transition-opacity duration-700 sm:h-36 sm:w-36" />
-      <div ref={moon} style={{ opacity: 0 }} className="absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff,#d9d2ff_60%,#a99cff)] shadow-[0_0_70px_20px_rgba(160,140,255,.45)] transition-opacity duration-700 sm:h-20 sm:w-20">
+      {/* Moon */}
+      <div ref={moon} style={{ left: "50%", top: "14%" }} className="absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff,#d9d2ff_60%,#a99cff)] shadow-[0_0_70px_20px_rgba(160,140,255,.45)] sm:h-20 sm:w-20">
         <span className="absolute top-[28%] left-[26%] h-3 w-3 rounded-full bg-[#b9adf0]" />
         <span className="absolute top-[56%] left-[56%] h-4 w-4 rounded-full bg-[#b9adf0]" />
       </div>
@@ -275,15 +352,31 @@ export function Scene() {
           <defs>
             <clipPath id="land"><path d="M0,520 L120,360 L210,430 L330,250 L450,410 L560,300 L690,440 L800,230 L930,420 L1040,320 L1170,450 L1290,270 L1420,420 L1530,340 L1600,400 L1600,900 L0,900 Z" /></clipPath>
           </defs>
+          <defs>
+            <clipPath id="cliffs"><path d="M0,610 L90,560 L260,575 L300,520 L470,540 L520,600 L700,585 L760,540 L960,555 L1010,605 L1180,590 L1240,530 L1430,550 L1480,600 L1600,585 L1600,900 L0,900 Z" /></clipPath>
+            <clipPath id="ground">
+              <path d="M1060,700 C1160,620 1260,600 1380,610 C1480,620 1560,660 1600,690 L1600,900 L1060,900 Z" />
+              <path d="M250,730 C250,640 410,640 410,730 Z" />
+              <path d="M0,720 C200,690 380,740 600,715 C820,690 1000,735 1200,720 C1380,706 1500,730 1600,722 L1600,900 L0,900 Z" />
+            </clipPath>
+          </defs>
+          {/* Each layer carries its own time-of-day tint, so the tint moves with it */}
+          <g ref={farRef} style={{ transformBox: "view-box", transformOrigin: "800px 900px" }}>
           {/* Far glacier peaks */}
           <path d="M0,520 L120,360 L210,430 L330,250 L450,410 L560,300 L690,440 L800,230 L930,420 L1040,320 L1170,450 L1290,270 L1420,420 L1530,340 L1600,400 L1600,900 L0,900 Z" fill="#d6ebfb" stroke="#121212" strokeWidth="3" strokeLinejoin="round" />
           <path d="M330,250 L370,330 L340,320 L310,380 L300,290 Z M800,230 L850,320 L812,305 L790,370 L770,280 Z M1290,270 L1335,350 L1300,338 L1280,395 L1262,310 Z" fill="#fff" />
           <path d="M800,230 L930,420 L860,420 L840,340 Z M330,250 L450,410 L390,410 L370,320 Z M1290,270 L1420,420 L1350,420 L1330,330 Z" fill="#b5d6ef" />
+          <rect x="-200" y="0" width="2000" height="900" clipPath="url(#land)" style={{ fill: "var(--shade)", mixBlendMode: "multiply" }} />
+          </g>
+          <g ref={midRef} style={{ transformBox: "view-box", transformOrigin: "800px 900px" }}>
           {/* Glacier cliffs */}
           <path d="M0,610 L90,560 L260,575 L300,520 L470,540 L520,600 L700,585 L760,540 L960,555 L1010,605 L1180,590 L1240,530 L1430,550 L1480,600 L1600,585 L1600,900 L0,900 Z" fill="#eaf6ff" stroke="#121212" strokeWidth="3" strokeLinejoin="round" />
           <g stroke="#9cc8e6" strokeWidth="3" strokeLinecap="round" fill="none">
             <path d="M310,540 L320,590 M360,545 L355,600 M780,555 L790,600 M840,560 L835,610 M1260,545 L1268,595 M1320,552 L1312,600" />
           </g>
+          <rect x="-200" y="0" width="2000" height="900" clipPath="url(#cliffs)" style={{ fill: "var(--shade)", mixBlendMode: "multiply" }} />
+          </g>
+          <g ref={frontRef} style={{ transformBox: "view-box", transformOrigin: "800px 900px" }}>
           {/* Sled hill */}
           <path d="M1060,700 C1160,620 1260,600 1380,610 C1480,620 1560,660 1600,690 L1600,900 L1060,900 Z" fill="#f6fbff" stroke="#121212" strokeWidth="3" />
           {/* Igloo */}
@@ -297,6 +390,8 @@ export function Scene() {
           {/* Foreground snow */}
           <path d="M0,720 C200,690 380,740 600,715 C820,690 1000,735 1200,720 C1380,706 1500,730 1600,722 L1600,900 L0,900 Z" fill="#ffffff" stroke="#121212" strokeWidth="3" />
           <path d="M0,780 C260,760 520,800 800,782 C1080,764 1340,800 1600,786 L1600,900 L0,900 Z" fill="#edf6fd" />
+          {/* Ground tint (the penguins stay bright on top of it) */}
+          <rect x="-200" y="0" width="2000" height="900" clipPath="url(#ground)" style={{ fill: "var(--shade)", mixBlendMode: "multiply" }} />
 
           {/* Sledder going down the hill */}
           <g className="sled">
@@ -347,15 +442,33 @@ export function Scene() {
             </g>
           </g>
 
-          {/* Time-of-day tint, clipped to the land so the sky stays clean */}
-          <rect x="-200" y="0" width="2000" height="900" clipPath="url(#land)" style={{ fill: "var(--shade)", mixBlendMode: "multiply" }} />
+          </g>
         </svg>
+      </div>
+
+      {/* The ice frame, dimmed at night with the rest of the world */}
+      <div className="absolute inset-0">
+        <div ref={leftRef} className="absolute bottom-0 left-0 h-[44vh] max-w-[30vw] origin-bottom-left sm:h-[78vh] sm:max-w-[40vw]">
+          <PineWall id="pines-l" />
+        </div>
+        <div ref={rightRef} className="absolute right-0 bottom-0 h-[44vh] max-w-[30vw] origin-bottom-right sm:h-[78vh] sm:max-w-[40vw]">
+          <div className="h-full -scale-x-100">
+            <PineWall id="pines-r" />
+          </div>
+        </div>
+        <div ref={lipRef} className="absolute inset-x-0 top-0 h-[14vh] min-h-20 origin-top sm:h-[20vh] sm:min-h-28">
+          <IceLip />
+        </div>
       </div>
 
       <canvas ref={snow} className="absolute inset-0 h-full w-full" />
 
-      {/* Soft haze at the edges so the glass UI reads cleanly on top */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,transparent_40%,rgba(243,241,255,.45))]" />
+      {/* The veil: fades in as you scroll past the art, so the page reads calm on top */}
+      <div className="absolute inset-0" style={{ background: dark ? "rgba(9, 8, 16, 0.7)" : "var(--veil)", opacity: "var(--veil-o, 1)" }} />
+      {/* Soft haze at the edges */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,transparent_35%,var(--color-void))]" style={{ opacity: "calc(var(--veil-o, 1) * 0.7)" }} />
     </div>
+
+    </>
   );
 }

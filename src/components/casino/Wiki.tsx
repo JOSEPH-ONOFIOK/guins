@@ -5,6 +5,7 @@ import { MIN_BET, RATE, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, TARGET } from "./FourSeconds";
 import { OU_PAYS } from "./OverUnder";
+import { Icon, type IconName } from "../Icon";
 import { Rules } from "./Rules";
 import { PAIR_PAYS, SYMBOLS } from "./Slots";
 
@@ -30,7 +31,7 @@ const pPair = SYMBOLS.reduce((t, s) => t + 3 * (s.w / W) ** 2 * (1 - s.w / W), 0
 const slotRtp = SLOT_LINES.reduce((t, s) => t + s.p * s.three, 0) + pPair * PAIR_PAYS;
 const pSlotWin = SLOT_LINES.reduce((t, s) => t + s.p, 0) + pPair;
 
-type Article = { id: string; icon: string; title: string; box?: [string, string][]; body: ReactNode };
+type Article = { id: string; icon: IconName; title: string; box?: [string, string][]; body: ReactNode };
 
 function H({ children }: { children: ReactNode }) {
   return <h4 className="mt-6 mb-2 font-display text-base font-bold text-gold">{children}</h4>;
@@ -64,13 +65,13 @@ const Tips = ({ items }: { items: string[] }) => (
 const ARTICLES: Article[] = [
   {
     id: "how-to-play",
-    icon: "📜",
+    icon: "scroll",
     title: "How to play",
     body: <Rules />,
   },
   {
     id: "start",
-    icon: "🐧",
+    icon: "penguin",
     title: "Getting started",
     body: (
       <>
@@ -88,10 +89,10 @@ const ARTICLES: Article[] = [
         <Table
           head={["Game", "Win chance", "Top payout", "Return", "Skill"]}
           rows={[
-            ["🪙 Coin Flip", pct(0.5), `${FLIP_PAYS}×`, pct(0.5 * FLIP_PAYS), "none"],
-            ["⏱️ 4 Seconds", "up to you", `${FOUR_TIERS[0].pays}×`, "depends on you", "all of it"],
-            ["🎲 Over / Under 7", `${pct(pSeven)}–${pct(pUnder)}`, `${OU_PAYS.seven}×`, `${pct(pSeven * OU_PAYS.seven)}–${pct(pUnder * OU_PAYS.under)}`, "none"],
-            ["🎰 Guin Slots", pct(pSlotWin), `${SYMBOLS[0].three}×`, pct(slotRtp), "none"],
+            ["Coin Flip", pct(0.5), `${FLIP_PAYS}×`, pct(0.5 * FLIP_PAYS), "none"],
+            ["4 Seconds", "up to you", `${FOUR_TIERS[0].pays}×`, "depends on you", "all of it"],
+            ["Over / Under 7", `${pct(pSeven)}–${pct(pUnder)}`, `${OU_PAYS.seven}×`, `${pct(pSeven * OU_PAYS.seven)}–${pct(pUnder * OU_PAYS.under)}`, "none"],
+            ["Guin Slots", pct(pSlotWin), `${SYMBOLS[0].three}×`, pct(slotRtp), "none"],
           ]}
         />
       </>
@@ -99,7 +100,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: "flip",
-    icon: "🪙",
+    icon: "coin",
     title: "Coin Flip",
     box: [["Type", "Luck"], ["Win chance", pct(0.5)], ["Payout", `${FLIP_PAYS}×`], ["Return", pct(0.5 * FLIP_PAYS)], ["Round time", "1.6s"]],
     body: (
@@ -116,7 +117,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: "four",
-    icon: "⏱️",
+    icon: "timer",
     title: "4 Seconds",
     box: [["Type", "Skill"], ["Target", `${TARGET.toFixed(2)}s`], ["Top payout", `${FOUR_TIERS[0].pays}×`], ["Clock hides", "after 1.5s"], ["Auto stop", "8s"]],
     body: (
@@ -142,7 +143,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: "dice",
-    icon: "🎲",
+    icon: "dice",
     title: "Over / Under 7",
     box: [["Type", "Luck"], ["Dice", "2 × six-sided"], ["Best odds", pct(pUnder)], ["Top payout", `${OU_PAYS.seven}×`], ["Round time", "0.9s"]],
     body: (
@@ -175,7 +176,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: "slots",
-    icon: "🎰",
+    icon: "slots",
     title: "Guin Slots",
     box: [["Type", "Luck"], ["Reels", "3"], ["Any win", pct(pSlotWin)], ["Jackpot", `${SYMBOLS[0].three}×`], ["Return", pct(slotRtp)]],
     body: (
@@ -195,7 +196,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: "glossary",
-    icon: "📖",
+    icon: "book",
     title: "Glossary",
     body: (
       <dl className="grid gap-3">
@@ -220,7 +221,7 @@ const ARTICLES: Article[] = [
   },
   {
     id: "faq",
-    icon: "❓",
+    icon: "help",
     title: "FAQ",
     body: (
       <div className="grid gap-2">
@@ -268,7 +269,7 @@ export function Wiki() {
 
   return (
     <div>
-      <div className="glass grid overflow-hidden md:grid-cols-[220px_1fr]">
+      <div className="glass grid grid-cols-[minmax(0,1fr)] overflow-hidden md:grid-cols-[220px_minmax(0,1fr)]">
         {/* Contents */}
         <nav aria-label="Wiki contents" className="border-b border-line bg-black/20 p-3 md:border-r md:border-b-0 md:p-4">
           <p className="label mb-2 hidden md:block">contents</p>
@@ -280,7 +281,7 @@ export function Wiki() {
                   aria-current={x.id === id ? "page" : undefined}
                   className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold whitespace-nowrap transition ${x.id === id ? "bg-gold/15 text-gold ring-1 ring-gold/50" : "hover:bg-white/5"}`}
                 >
-                  <span>{x.icon}</span>
+                  <Icon name={x.icon} className="h-4.5 w-4.5" />
                   {x.title}
                 </button>
               </li>
@@ -293,14 +294,14 @@ export function Wiki() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <div className="min-w-0 flex-1">
               <h3 className="font-display text-2xl font-bold sm:text-3xl">
-                <span className="mr-2">{a.icon}</span>
+                <Icon name={a.icon} className="mr-2 inline h-7 w-7 -translate-y-0.5 text-accent" />
                 {a.title}
               </h3>
               <div className="mt-4 text-[0.95rem]">{a.body}</div>
             </div>
             {a.box && (
               <aside className="well w-full shrink-0 overflow-hidden !p-0 lg:sticky lg:top-24 lg:w-56">
-                <p className="bg-gold/15 px-4 py-2 text-center font-display text-sm font-bold text-gold">{a.icon} {a.title}</p>
+                <p className="bg-gold/15 px-4 py-2 text-center font-display text-sm font-bold text-gold">{a.title}</p>
                 <dl>
                   {a.box.map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-3 border-t border-line px-4 py-2 text-sm">

@@ -1,36 +1,69 @@
 @import "tailwindcss";
 
-/* Guins: a pastel neon glacier. Soft lavender background, frosted white glass
-   with violet → cyan gradient edges, gold for $RPENG, mono for on-chain data. */
+/* Guins: calm and dark by default, one gold accent, big rounded headlines.
+   The glacier world still lives behind everything, dimmed by a veil.
+   Light theme: html[data-light] (set by the theme toggle, or by the sun in Auto). */
 @theme {
-  --color-void: #f3f1ff;
-  --color-fg: #17123d;
-  --color-dim: #423c70;
-  --color-line: rgba(23, 18, 61, 0.1);
-  --color-cyan: #0aa9c9;
-  --color-violet: #7445f5;
-  --color-pink: #e03fb4;
+  --color-void: #0b0a12;
+  --color-fg: #f5f3ff;
+  --color-dim: #b9b4d0;
+  --color-line: rgba(255, 255, 255, 0.1);
+  --color-surface: #15141f;
+  --color-raised: #1e1c2b;
+  --color-accent: #ffcf3f;
+  --color-accent-ink: #17130a;
   --color-gold: #ffcf3f;
-  --color-amber: #b87400;
-  --color-flame: #e5384f;
-  --color-mint: #0f9f73;
-  --color-surface: #ffffff;
+  --color-amber: #ffcf3f;
+  --color-cyan: #4fe3ff;
+  --color-violet: #b69bff;
+  --color-pink: #ff8fe0;
+  --color-flame: #ff6b7d;
+  --color-mint: #3ee6a8;
 
   --font-display: var(--font-fredoka), "Arial Rounded MT Bold", system-ui, sans-serif;
   --font-body: var(--font-fredoka), system-ui, sans-serif;
   --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* Surfaces, as variables so a section (the casino) can pin its own */
 :root {
-  --edge: linear-gradient(135deg, rgba(139, 92, 255, 0.85), rgba(54, 241, 255, 0.45) 45%, rgba(255, 79, 216, 0.7));
-  --neon: linear-gradient(100deg, #8b5cff, #36f1ff);
-  --panel: rgba(255, 255, 255, 0.72);
+  --panel: rgba(19, 18, 29, 0.86);
+  --well: rgba(255, 255, 255, 0.04);
+  --ghost: rgba(255, 255, 255, 0.04);
+  --ghost-line: rgba(255, 255, 255, 0.18);
+  --field: rgba(0, 0, 0, 0.35);
+  --shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.75);
+  --veil: rgba(9, 8, 16, 0.64);
+  --edge: linear-gradient(var(--color-line), var(--color-line));
+}
+
+html[data-light] {
+  color-scheme: light;
+  --color-void: #f4f2fb;
+  --color-fg: #17123d;
+  --color-dim: #4a4570;
+  --color-line: rgba(23, 18, 61, 0.1);
+  --color-surface: #ffffff;
+  --color-raised: #f4f2fb;
+  --color-amber: #a86a00;
+  --color-cyan: #0a8fac;
+  --color-violet: #7445f5;
+  --color-pink: #c42f99;
+  --color-flame: #d6304a;
+  --color-mint: #0f9f73;
+  --panel: rgba(255, 255, 255, 0.9);
+  --well: rgba(23, 18, 61, 0.035);
+  --ghost: rgba(255, 255, 255, 0.7);
+  --ghost-line: rgba(23, 18, 61, 0.16);
+  --field: #ffffff;
+  --shadow: 0 24px 60px -30px rgba(23, 18, 61, 0.35);
+  --veil: rgba(244, 242, 251, 0.3);
 }
 
 html {
   scroll-behavior: smooth;
   background: var(--color-void);
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
@@ -41,15 +74,27 @@ body {
   line-height: 1.55;
   overflow-x: hidden;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: var(--color-violet);
-  color: #fff;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 
+/* Keyboard focus: a gold ring on anything you can tab to (mouse clicks don't show it) */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.field:focus-visible { outline: none; }
+
+/* Bright gold text is unreadable on the light background: use the deep gold there.
+   (The casino stays dark in both themes, so it keeps the bright gold.) */
+html[data-light] .text-accent:not(.casino *) { color: var(--color-amber); }
+
 @layer components {
-  /* Glass panel with a gradient hairline edge and a soft violet glow */
+  /* Calm card: solid panel, hairline edge, soft drop shadow */
   .glass {
     position: relative;
     background:
@@ -57,65 +102,66 @@ body {
       var(--edge) border-box;
     border: 1px solid transparent;
     border-radius: 24px;
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 24px 60px -28px rgba(116, 69, 245, 0.45);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: var(--shadow);
   }
 
   /* Quieter inset surface for rows and stats inside a panel */
   .well {
-    background: rgba(255, 255, 255, 0.6);
+    background: var(--well);
     border: 1px solid var(--color-line);
     border-radius: 16px;
   }
 
-  /* Small mono pill */
+  /* Small uppercase pill */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-dim);
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--color-line);
+    color: var(--color-fg);
+    background: var(--ghost);
+    border: 1px solid var(--ghost-line);
     border-radius: 999px;
-    padding: 0.35rem 0.8rem;
+    padding: 0.4rem 0.85rem;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
 
+  /* Small uppercase caption. .label-accent for the gold step labels. */
   .label {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--color-dim);
   }
+  .label-accent { color: var(--color-amber); }
 
   .btn {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     font-family: var(--font-body);
+    font-size: 0.85rem;
     font-weight: 700;
-    border-radius: 14px;
-    padding: 0.75rem 1.4rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-radius: 10px;
+    padding: 0.8rem 1.3rem;
     border: 1px solid transparent;
-    transition: transform 0.2s cubic-bezier(0.2, 1.4, 0.4, 1), box-shadow 0.2s ease, background 0.2s, border-color 0.2s;
+    transition: transform 0.2s cubic-bezier(0.2, 1.4, 0.4, 1), box-shadow 0.2s ease, background 0.2s, border-color 0.2s, color 0.2s;
     cursor: pointer;
     user-select: none;
   }
-  .btn:hover { transform: translateY(-2px); }
-  .btn:active { transform: translateY(1px) scale(0.98); }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px) scale(0.99); }
   .btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -123,17 +169,15 @@ body {
     box-shadow: none;
   }
 
-  /* Primary: violet → cyan, glowing */
-  .btn-neon {
-    color: #fff;
-    background: var(--neon);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 8px 30px -6px rgba(139, 92, 255, 0.7);
+  /* Primary: flat gold */
+  .btn-accent {
+    color: var(--color-accent-ink);
+    background: var(--color-accent);
+    box-shadow: 0 10px 30px -14px rgba(255, 207, 63, 0.8);
   }
-  .btn-neon:hover:not(:disabled) {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 10px 40px -4px rgba(54, 241, 255, 0.65);
-  }
+  .btn-accent:hover:not(:disabled) { background: #ffdb6b; }
 
-  /* Gold, for $RPENG */
+  /* Gold with a little shine, for the casino */
   .btn-gold {
     color: #1a1200;
     background: linear-gradient(180deg, #ffe07a, #ffb72e);
@@ -141,21 +185,29 @@ body {
   }
   .btn-gold:hover:not(:disabled) { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4) inset, 0 10px 36px -4px rgba(255, 191, 46, 0.85); }
 
-  /* Ghost: glass with a hairline */
+  /* Ghost: hairline outline */
   .btn-ghost {
     color: var(--color-fg);
-    background: rgba(255, 255, 255, 0.7);
-    border-color: rgba(23, 18, 61, 0.12);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: var(--ghost);
+    border-color: var(--ghost-line);
   }
-  .btn-ghost:hover:not(:disabled) {
-    background: #fff;
-    border-color: rgba(116, 69, 245, 0.45);
-    box-shadow: 0 8px 24px -10px rgba(116, 69, 245, 0.5);
-  }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-fg); }
 
-  .btn-sm { padding: 0.45rem 0.95rem; font-size: 0.875rem; border-radius: 11px; }
+  .btn-sm { padding: 0.55rem 0.95rem; font-size: 0.75rem; border-radius: 9px; }
+
+  /* Round outline icon button (X, theme) */
+  .icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 999px;
+    color: var(--color-fg);
+    border: 1px solid var(--ghost-line);
+    background: var(--ghost);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .icon-btn:hover { border-color: var(--color-accent); transform: translateY(-1px); }
 
   .field {
     min-width: 0;
@@ -163,55 +215,33 @@ body {
     font-family: var(--font-mono);
     font-size: 0.85rem;
     color: var(--color-fg);
-    background: #fff;
+    background: var(--field);
     border: 1px solid var(--color-line);
-    border-radius: 11px;
-    padding: 0.5rem 0.85rem;
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .field::placeholder { color: rgba(93, 88, 134, 0.55); }
-  .field:focus { border-color: var(--color-cyan); box-shadow: 0 0 0 3px rgba(10, 169, 201, 0.15); }
+  .field::placeholder { color: var(--color-dim); opacity: 0.6; }
+  .field:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255, 207, 63, 0.18); }
   .field:disabled { opacity: 0.45; }
 }
 
-/* Frosted backing for text that sits straight on the scenery */
+/* Soft backing for text that sits straight on the scenery */
 .legible {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: var(--panel);
+  border: 1px solid var(--color-line);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 16px;
   padding: 0.6rem 1.1rem;
-  box-shadow: 0 8px 30px -14px rgba(23, 18, 61, 0.35);
 }
 
-/* Gradient headline text with a faint glow */
-.grad-text {
-  background: linear-gradient(100deg, #3d2bb8 5%, #7445f5 35%, #0aa9c9 65%, #e03fb4 95%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: sheen 8s ease-in-out infinite alternate;
-  filter: drop-shadow(0 6px 24px rgba(116, 69, 245, 0.25));
-}
-@keyframes sheen {
-  from { background-position: 0% 50%; }
-  to { background-position: 100% 50%; }
-}
-
-/* Per-letter slice of the same gradient, for headlines whose letters animate on
-   their own (background-clip on the parent can't paint transformed children) */
-.grad-letter {
-  background-image: linear-gradient(100deg, #3d2bb8 5%, #7445f5 32%, #0aa9c9 64%, #e03fb4 95%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+/* Headings: plain and bold. (Kept as a class so headings can be restyled in one place.) */
+.grad-text { color: var(--color-fg); }
 
 .glow-dot {
-  box-shadow: 0 0 0 3px rgba(77, 255, 181, 0.18), 0 0 12px rgba(77, 255, 181, 0.9);
+  box-shadow: 0 0 0 3px rgba(255, 207, 63, 0.18), 0 0 12px rgba(255, 207, 63, 0.9);
 }
 
 /* Holographic sheen that sweeps across a card on hover */
@@ -378,7 +408,7 @@ body {
 }
 
 /* ---------- Background world ---------- */
-.scene { --sky-top: #8fa8ff; --sky-mid: #c7c4ff; --sky-bot: #f1e6ff; --shade: #f2f0ff; --night: 0.2; }
+.scene { --sky-top: #070a24; --sky-mid: #141a4a; --sky-bot: #28306e; --shade: #5560b0; --night: 1; }
 
 .aurora { animation: aurora 14s ease-in-out infinite alternate; }
 @keyframes aurora {
@@ -459,7 +489,7 @@ body {
 }
 
 /* ---------- $RPENG casino (/rpeng) ---------- */
-/* Night-time colour scope: every token-based utility inside flips to dark */
+/* Always dark, whatever the site theme: pins the dark colours and surfaces */
 .casino {
   --color-fg: #f6f1ff;
   --color-dim: #d9d2f7;
@@ -468,47 +498,19 @@ body {
   --color-amber: #ffcf3f;
   --color-violet: #b69bff;
   --color-cyan: #4fe3ff;
+  --color-pink: #ff8fe0;
   --color-flame: #ff6b7d;
   --panel: rgba(22, 14, 48, 0.72);
+  --well: rgba(255, 255, 255, 0.05);
+  --ghost: rgba(255, 255, 255, 0.06);
+  --ghost-line: rgba(255, 255, 255, 0.18);
+  --field: rgba(0, 0, 0, 0.35);
+  --shadow: 0 24px 70px -24px rgba(255, 79, 216, 0.35);
   --edge: linear-gradient(135deg, rgba(255, 207, 63, 0.75), rgba(255, 79, 216, 0.45) 45%, rgba(54, 241, 255, 0.55));
-  color: var(--color-fg);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 79, 216, 0.25), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 100% 60%, rgba(54, 241, 255, 0.12), transparent 70%),
-    radial-gradient(ellipse 60% 40% at 0% 80%, rgba(255, 207, 63, 0.1), transparent 70%),
-    #0d0820;
-}
-/* Dark surfaces, shared by the casino and night mode */
-:is(.casino, html[data-night]) .well { background: rgba(255, 255, 255, 0.05); }
-:is(.casino, html[data-night]) .chip { background: rgba(255, 255, 255, 0.06); }
-:is(.casino, html[data-night]) .btn-ghost { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.18); }
-:is(.casino, html[data-night]) .field { background: rgba(0, 0, 0, 0.35); }
-:is(.casino, html[data-night]) .field::placeholder { color: rgba(185, 176, 222, 0.5); }
-.casino .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 207, 63, 0.6); box-shadow: 0 0 22px -6px rgba(255, 207, 63, 0.6); }
-
-/* ---------- Night mode ----------
-   The Scene sets data-night on <html> while the sun is below the horizon. */
-html[data-night] {
   color-scheme: dark;
-  --color-void: #0b0920;
-  --color-fg: #f4f1ff;
-  --color-dim: #cfc8f0;
-  --color-line: rgba(255, 255, 255, 0.12);
-  --color-surface: #14112e;
-  --color-mint: #3ee6a8;
-  --color-amber: #ffcf3f;
-  --color-violet: #b69bff;
-  --color-cyan: #4fe3ff;
-  --color-flame: #ff6b7d;
-  --panel: rgba(18, 14, 44, 0.72);
+  color: var(--color-fg);
 }
-html[data-night] .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); border-color: rgba(79, 227, 255, 0.6); box-shadow: 0 0 22px -6px rgba(79, 227, 255, 0.6); }
-html[data-night] .glass { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 70px -24px rgba(139, 92, 255, 0.55); }
-html[data-night] .legible { background: rgba(20, 17, 46, 0.7); border-color: rgba(255, 255, 255, 0.12); }
-html[data-night] .grad-text { background-image: linear-gradient(100deg, #ffffff 5%, #c9b8ff 35%, #4fe3ff 65%, #ff8fe0 95%); filter: drop-shadow(0 0 24px rgba(139, 92, 255, 0.5)); }
-html[data-night] .grad-letter { background-image: linear-gradient(100deg, #ffffff 5%, #c9b8ff 32%, #4fe3ff 64%, #ff8fe0 95%); }
-
-/* For one second around a switch, every colour eases instead of snapping */
+/* For one second around a theme switch, every colour eases instead of snapping */
 html.theme-fade *,
 html.theme-fade *::before,
 html.theme-fade *::after {
@@ -562,4 +564,27 @@ html.theme-fade *::after {
   0% { transform: rotate(-8deg) translateY(-3px); }
   50% { transform: rotate(8deg) translateY(2px); }
   100% { transform: rotate(-8deg) translateY(-3px); }
+}
+
+/* "GUINS" written in clouds: puffy white letters with a soft sky-blue underside */
+.cloud-type {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    0 0 1px #fff,
+    0 0 14px rgba(255, 255, 255, 0.95),
+    0 0 34px rgba(255, 255, 255, 0.6),
+    0 0.05em 0 #d8e8ff,
+    0 0.09em 0 #b9d2f5,
+    0 0.16em 0.3em rgba(40, 60, 140, 0.35);
+  letter-spacing: 0.02em;
+}
+
+/* Little line that drips down under "Scroll" */
+.scroll-hint { transform-origin: top; animation: scroll-hint 1.8s cubic-bezier(0.6, 0, 0.3, 1) infinite; }
+@keyframes scroll-hint {
+  0% { transform: scaleY(0); opacity: 1; }
+  60% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1) translateY(30%); opacity: 0; }
 }

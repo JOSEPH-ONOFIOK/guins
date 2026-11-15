@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { Icon, type IconName } from "../Icon";
+import { ChainLock } from "./ChainLock";
 import { useEffect, useRef, useState } from "react";
-import { MIN_BET, RATE, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { MIN_BET, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { CoinFlip, FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, FourSeconds } from "./FourSeconds";
 import { OU_PAYS, OverUnder } from "./OverUnder";
@@ -11,10 +13,10 @@ import type { GameProps } from "./types";
 
 // brief: the short explainer shown when a game is picked. wiki: its full guide.
 const GAMES = [
-  { id: "flip", wiki: "flip", name: "Coin Flip", icon: "🪙", Game: CoinFlip, tag: "50/50 luck", brief: `Call $RPENG or Beak, then flip. Land on your side and win ${FLIP_PAYS}× your bet.` },
-  { id: "four", wiki: "four", name: "4 Seconds", icon: "⏱️", Game: FourSeconds, tag: "pure skill", brief: `Start the clock and stop it on exactly 4.00s. It hides after 1.5s. Nail it for ${FOUR_TIERS[0].pays}×, get close for ${FOUR_TIERS[1].pays}× or ${FOUR_TIERS[2].pays}×.` },
-  { id: "dice", wiki: "dice", name: "Over / Under 7", icon: "🎲", Game: OverUnder, tag: "dice luck", brief: `Two dice get added up. Call under 7 or over 7 for ${OU_PAYS.under}×, or exactly 7 for ${OU_PAYS.seven}×.` },
-  { id: "slots", wiki: "slots", name: "Guin Slots", icon: "🎰", Game: Slots, tag: "reel luck", brief: `Pull the lever. Three of a kind pays up to ${SYMBOLS[0].three}× on 💎💎💎, and any pair pays ${PAIR_PAYS}×.` },
+  { id: "flip", wiki: "flip", name: "Coin Flip", icon: "coin" as IconName, Game: CoinFlip, tag: "50/50 luck", brief: `Call $RPENG or Beak, then flip. Land on your side and win ${FLIP_PAYS}× your bet.` },
+  { id: "four", wiki: "four", name: "4 Seconds", icon: "timer" as IconName, Game: FourSeconds, tag: "pure skill", brief: `Start the clock and stop it on exactly 4.00s. It hides after 1.5s. Nail it for ${FOUR_TIERS[0].pays}×, get close for ${FOUR_TIERS[1].pays}× or ${FOUR_TIERS[2].pays}×.` },
+  { id: "dice", wiki: "dice", name: "Over / Under 7", icon: "dice" as IconName, Game: OverUnder, tag: "dice luck", brief: `Two dice get added up. Call under 7 or over 7 for ${OU_PAYS.under}×, or exactly 7 for ${OU_PAYS.seven}×.` },
+  { id: "slots", wiki: "slots", name: "Guin Slots", icon: "slots" as IconName, Game: Slots, tag: "reel luck", brief: `Pull the lever. Three of a kind pays up to ${SYMBOLS[0].three}× on 💎💎💎, and any pair pays ${PAIR_PAYS}×.` },
 ] as const;
 
 const CHIPS = [1_000_000, 5_000_000, 10_000_000, 25_000_000, 100_000_000];
@@ -25,6 +27,9 @@ const CHIP_COLOR: Record<number, string> = {
   25_000_000: "bg-[#4dd9a0] text-[#06301f]",
   100_000_000: "bg-[#17123d] text-[#ffcf3f]",
 };
+
+// Flip to false to open the tables
+export const GAMES_LOCKED = true;
 
 const KEY = "guins_casino_v1";
 type Result = { id: number; game: string; bet: number; net: number; note: string };
@@ -87,7 +92,10 @@ export function Casino() {
   const Game = current.Game;
 
   return (
-    <div className="glass overflow-hidden !rounded-3xl">
+    <div className="glass relative overflow-hidden !rounded-3xl">
+      {GAMES_LOCKED && <ChainLock />}
+      {/* Everything under the lock is out of reach: no clicks, no tabbing, hidden from screen readers */}
+      <div inert={GAMES_LOCKED} aria-hidden={GAMES_LOCKED || undefined}>
       {/* Balance bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-black/20 px-5 py-4 sm:px-7">
         <div>
@@ -95,15 +103,13 @@ export function Casino() {
           <div key={balance} className="pop-in font-mono text-3xl font-bold text-gold tabular-nums sm:text-4xl">{fmtTok(balance)}</div>
           <div className="font-mono text-xs text-dim">≈ {fmtUsd(balance)} · {balance.toLocaleString("en-US")} $RPENG</div>
         </div>
-        <div className="text-right">
-          <div className="label">rate</div>
-          <div className="font-mono text-sm text-fg">{fmtTok(RATE.tokens)} = {fmtUsd(RATE.tokens)}</div>
-          {broke && (
-            <button className="btn btn-neon btn-sm mt-2" onClick={() => setBalance(START_CHIPS)}>
-              Top up to {fmtTok(START_CHIPS)}
-            </button>
-          )}
-        </div>
+        {broke ? (
+          <button className="btn btn-accent btn-sm" onClick={() => setBalance(START_CHIPS)}>
+            Top up to {fmtTok(START_CHIPS)}
+          </button>
+        ) : (
+          <span className="chip">Free play chips</span>
+        )}
       </div>
 
       {/* Game picker */}
@@ -117,7 +123,7 @@ export function Casino() {
             onClick={() => (setGame(g.id), setFlash(null), setWarn(null))}
             className={`rounded-2xl border px-3 py-3 text-left transition disabled:opacity-50 ${g.id === game ? "border-gold/70 bg-gold/15 shadow-[0_0_24px_-6px_rgba(255,207,63,.6)]" : "border-line bg-white/5 hover:bg-white/10"}`}
           >
-            <span className="text-2xl">{g.icon}</span>
+            <Icon name={g.icon} className="h-6 w-6 text-accent" />
             <span className="mt-1 block font-display text-sm font-bold">{g.name}</span>
           </button>
         ))}
@@ -125,7 +131,7 @@ export function Casino() {
 
       {/* Short brief for the picked game */}
       <div key={current.id} className="pop-in mx-3 mb-3 flex flex-col gap-2 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 sm:mx-4 sm:flex-row sm:items-center sm:gap-4">
-        <span className="text-3xl">{current.icon}</span>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-accent-ink"><Icon name={current.icon} className="h-6 w-6" /></span>
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-2 font-display font-bold">
             {current.name}
@@ -195,6 +201,7 @@ export function Casino() {
           </ul>
         </div>
       )}
+      </div>
     </div>
   );
 }

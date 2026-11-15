@@ -61,7 +61,7 @@ export function FourSeconds({ busy, start, settle }: GameProps) {
         {running && <span className="label absolute top-3 right-4 animate-pulse !text-gold">● live</span>}
       </div>
       <p className="mt-6 text-sm text-dim">Start, count in your head, stop on 4.00.</p>
-      <button className={`btn mt-3 min-w-40 ${running ? "btn-gold" : "btn-neon"}`} disabled={busy && !running} onClick={go}>
+      <button className={`btn mt-3 min-w-40 ${running ? "btn-gold" : "btn-accent"}`} disabled={busy && !running} onClick={go}>
         {running ? "STOP" : "Start the clock"}
       </button>
     </div>

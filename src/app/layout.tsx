@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Fredoka, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import { THEME_BOOT } from "@/lib/theme";
+import { SmoothScroll } from "@/components/SmoothScroll";
 
 // Fredoka for everything you read, JetBrains Mono for numbers
 const fredoka = Fredoka({ variable: "--font-fredoka", subsets: ["latin"] });
@@ -16,16 +18,23 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   applicationName: TITLE,
   keywords: ["Guins", "$RPENG", "penguin", "NFT", "PFP", "colony", "allowlist"],
-  openGraph: { type: "website", url: "/", siteName: TITLE, title: TITLE, description: DESCRIPTION, images: ["/hg/boss.jpg"] },
-  twitter: { card: "summary_large_image", site: "@hoodguins", creator: "@hoodguins", title: TITLE, description: DESCRIPTION, images: ["/hg/boss.jpg"] },
+  openGraph: { type: "website", url: "/", siteName: TITLE, title: TITLE, description: DESCRIPTION, images: ["/hg/gold.png"] },
+  twitter: { card: "summary_large_image", site: "@hoodguins", creator: "@hoodguins", title: TITLE, description: DESCRIPTION, images: ["/hg/gold.png"] },
 };
 
-export const viewport: Viewport = { themeColor: "#f3f1ff" };
+export const viewport: Viewport = { themeColor: "#0b0a12" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${fredoka.variable} ${mono.variable} antialiased`}>
-      <body className="min-h-dvh">{children}</body>
+    // suppressHydrationWarning: THEME_BOOT may add data-light before React loads
+    <html lang="en" data-scroll-behavior="smooth" className={`${fredoka.variable} ${mono.variable} antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
+      <body className="min-h-dvh">
+        <SmoothScroll />
+        {children}
+      </body>
     </html>
   );
 }

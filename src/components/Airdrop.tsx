@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AIRDROP_POST, AIRDROP_POST_ID, AIRDROP_SHARE, qrtText, refLink } from "@/lib/airdrop";
 import { WALLET, X_HANDLE, X_URL, type PublicEntry } from "@/lib/entry";
 import { AUTH_ERRORS } from "./Crew";
+import { Icon } from "./Icon";
 import { XIcon } from "./Nav";
 
 // $RPENG airdrop application: follow, comment + retweet the airdrop post, quote it with
@@ -154,10 +155,10 @@ export function Airdrop() {
             ) : auth === "dev" ? (
               <form onSubmit={(e) => (e.preventDefault(), connect())} className="mx-auto flex max-w-xs gap-2">
                 <input value={devHandle} onChange={(e) => setDevHandle(e.target.value)} placeholder="handle (dev)" className="field" />
-                <button className="btn btn-neon btn-sm" disabled={busy === "connect"}>Go</button>
+                <button className="btn btn-accent btn-sm" disabled={busy === "connect"}>Go</button>
               </form>
             ) : (
-              <button onClick={connect} className="btn btn-neon text-lg">
+              <button onClick={connect} className="btn btn-accent text-lg">
                 <XIcon /> Connect X to apply
               </button>
             )}
@@ -192,7 +193,7 @@ export function Airdrop() {
               <ol className="mt-5 grid gap-3">
                 <Step n={1} title={`Follow @${X_HANDLE}`} done={!!ad?.followed}>
                   <button
-                    className={`btn btn-sm ${ad?.followed ? "btn-ghost" : "btn-neon"}`}
+                    className={`btn btn-sm ${ad?.followed ? "btn-ghost" : "btn-accent"}`}
                     disabled={busy === "follow"}
                     onClick={() => {
                       openX(intent("follow", { screen_name: X_HANDLE }));
@@ -209,22 +210,22 @@ export function Airdrop() {
                   ) : (
                     <div className="flex flex-wrap items-center gap-2">
                       <button
-                        className={`btn btn-sm ${ad?.commented ? "btn-ghost !text-mint" : "btn-neon"}`}
+                        className={`btn btn-sm ${ad?.commented ? "btn-ghost !text-mint" : "btn-accent"}`}
                         onClick={() => {
                           openX(AIRDROP_POST_ID ? intent("post", { in_reply_to: AIRDROP_POST_ID, text: "Applying for the $RPENG airdrop 🐧" }) : POST_URL);
                           step({ step: "engage", action: "comment" }, "comment");
                         }}
                       >
-                        💬 {ad?.commented ? "Commented" : "Comment"}
+                        <Icon name="comment" className="h-4 w-4" /> {ad?.commented ? "Commented" : "Comment"}
                       </button>
                       <button
-                        className={`btn btn-sm ${ad?.reposted ? "btn-ghost !text-mint" : "btn-neon"}`}
+                        className={`btn btn-sm ${ad?.reposted ? "btn-ghost !text-mint" : "btn-accent"}`}
                         onClick={() => {
                           openX(AIRDROP_POST_ID ? intent("retweet", { tweet_id: AIRDROP_POST_ID }) : POST_URL);
                           step({ step: "engage", action: "repost" }, "repost");
                         }}
                       >
-                        ⟲ {ad?.reposted ? "Retweeted" : "Retweet"}
+                        <Icon name="repost" className="h-4 w-4" /> {ad?.reposted ? "Retweeted" : "Retweet"}
                       </button>
                       <a href={POST_URL} target="_blank" rel="noreferrer" className="font-mono text-xs text-dim underline">view post</a>
                     </div>
@@ -248,7 +249,7 @@ export function Airdrop() {
                       </button>
                       <form onSubmit={(e) => (e.preventDefault(), step({ step: "qrt", link }, "qrt"))} className="mt-3 flex flex-col gap-2 sm:flex-row">
                         <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://x.com/you/status/…" spellCheck={false} className="field" />
-                        <button className="btn btn-neon btn-sm" disabled={busy === "qrt" || !link.trim()}>{busy === "qrt" ? "Checking…" : "Verify"}</button>
+                        <button className="btn btn-accent btn-sm" disabled={busy === "qrt" || !link.trim()}>{busy === "qrt" ? "Checking…" : "Verify"}</button>
                       </form>
                       {err?.step === "qrt" && <Err>{err.text}</Err>}
                     </>

@@ -1,48 +1,47 @@
-import Link from "next/link";
-import { HoodguinArt } from "./HoodguinArt";
+import { authMode } from "@/lib/auth";
+import { Crew } from "./Crew";
+import { ArrowIcon } from "./Nav";
+import { Reveal } from "./Reveal";
 
-const WORD = "Guins";
-
-// Token and collection facts stay placeholders until they're announced.
-const STATS = [
-  ["ticker", "$RPENG"],
-  ["chain", "TBA"],
-  ["supply", "TBA"],
-  ["mint", "soon"],
-];
-
-// Full-screen intro sitting over the living glacier world (see Scene).
+// Split intro: the pitch on the left, the whitelist application on the right.
 export function Hero() {
+  const open = authMode !== "off";
   return (
-    <section id="top" className="relative">
-      <div className="mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center px-4 pt-32 text-center sm:px-8 sm:pt-40">
-        <h1 className="relative mx-auto w-fit font-display text-[clamp(4rem,16vw,10rem)] leading-[0.9] font-black tracking-[-0.04em] drop-shadow-[0_8px_30px_rgba(116,69,245,.3)]" aria-label="Guins">
-          {WORD.split("").map((c, i) => (
-            <span key={i} aria-hidden className="rise grad-letter" style={{ animationDelay: `${120 + i * 70}ms`, backgroundSize: `${WORD.length * 100}% 100%`, backgroundPosition: `${(i / (WORD.length - 1)) * 100}% 0` }}>{c}</span>
-          ))}
-        </h1>
+    <section id="apply" className="relative">
+      <div className="mx-auto grid min-h-[100svh] max-w-6xl items-center gap-12 px-4 pt-24 pb-20 sm:px-8 lg:grid-cols-[1fr_minmax(0,34rem)] lg:gap-16">
+        <Reveal>
+          <p className="chip">
+            <span className="glow-dot h-1.5 w-1.5 rounded-full bg-accent" />
+            {open ? "Applications open" : "Applications opening soon"}
+          </p>
+          <h2 className="mt-6 font-display text-[clamp(3.6rem,9vw,6.5rem)] leading-[0.88] font-bold tracking-tight uppercase">
+            Whitelist<span className="text-accent">.</span>
+          </h2>
+          <p className="mt-3 font-display text-[clamp(2rem,4.6vw,3.4rem)] leading-[0.95] font-bold text-accent uppercase">
+            Join the
+            <br />
+            colony.
+          </p>
+          <p className="mt-6 max-w-sm text-lg text-dim">Sign in with X. Complete the tasks. Submit your wallet.</p>
 
-        <p className="legible pop-in mx-auto mt-6 max-w-lg text-lg font-semibold text-fg [animation-delay:.7s] sm:text-xl">
-          The most unbothered little penguins on-chain. Collect the gang, earn your place in the colony.
-        </p>
-        <div className="pop-in mt-8 flex flex-wrap justify-center gap-3 [animation-delay:.85s]">
-          <a href="#colony" className="btn btn-neon text-base">
-            Join the colony
-            <span aria-hidden className="-my-2 inline-flex"><HoodguinArt className="h-7 w-auto drop-shadow-[0_2px_4px_rgba(0,0,0,.25)]" /></span>
-          </a>
-          <a href="#gang" className="btn btn-ghost text-base">Explore the gang</a>
-        </div>
+          <div className="mt-10 max-w-sm border-t border-line pt-6">
+            <a href="#colony" className="group inline-flex items-center gap-4">
+              <span>
+                <span className="block text-sm text-dim">Already applied?</span>
+                <span className="block font-bold">Check your status</span>
+              </span>
+              <span className="icon-btn transition group-hover:border-accent group-hover:bg-accent group-hover:text-accent-ink">
+                <ArrowIcon />
+              </span>
+            </a>
+          </div>
+        </Reveal>
 
-        <dl className="glass pop-in mt-12 grid w-full max-w-2xl grid-cols-2 !rounded-2xl [animation-delay:1s] sm:grid-cols-4 sm:divide-x sm:divide-line">
-          {STATS.map(([k, v]) => (
-            <div key={k} className="px-4 py-3.5 text-left sm:text-center">
-              <dt className="label">{k}</dt>
-              <dd className={`mt-0.5 font-mono text-base font-semibold ${v === "soon" ? "text-mint" : "text-fg"}`}>
-                {k === "ticker" ? <Link href="/rpeng" className="text-amber underline decoration-amber/40 underline-offset-4 hover:decoration-amber">{v} ↗</Link> : v}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <Reveal delay={120} className="scroll-mt-28">
+          <div id="colony" className="scroll-mt-28">
+            <Crew />
+          </div>
+        </Reveal>
       </div>
     </section>
   );
