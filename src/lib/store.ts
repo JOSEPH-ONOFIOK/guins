@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { cookieBase, sign, unsign } from "./auth";
 import type { Entry } from "./entry";
+import { queueMirror } from "./mirror";
 
 // Storage:
 //   Upstash Redis   when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set
@@ -21,7 +22,7 @@ const key = (h: string) => h.toLowerCase();
 const URL_ = process.env.UPSTASH_REDIS_REST_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-async function redis<T = unknown>(...cmd: (string | number)[]): Promise<T> {
+export async function redis<T = unknown>(...cmd: (string | number)[]): Promise<T> {
   const res = await fetch(URL_!, {
     method: "POST",
     headers: { Authorization: `Bearer ${TOKEN}` },
@@ -90,4 +91,13 @@ const cookie: Store = {
 };
 
 export const hasDatabase = !!(URL_ && TOKEN);
-export const store: Store = hasDatabase ? upstash : cookie;
+const base: Store = hasDatabase ? upstash : cookie;
+
+// Every save is also copied to the Google Sheet, when one is set up
+export const store: Store = {
+  ...base,
+  async put(entry) {
+    await base.put(entry);
+    queueMirror(entry);
+  },
+};

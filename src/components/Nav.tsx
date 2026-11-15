@@ -1,13 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { X_URL } from "@/lib/entry";
+import { X_HANDLE, X_URL } from "@/lib/entry";
+import { HoodguinArt } from "./HoodguinArt";
 
 const LINKS = [
-  { href: "#gang", label: "gang" },
-  { href: "#stash", label: "$RPENG" },
-  { href: "#crew", label: "join" },
+  { href: "/#gang", label: "gang" },
+  { href: "/rpeng", label: "$RPENG" },
+  { href: "/#colony", label: "the colony" },
 ];
+
+// The brand mark: a little Guin peeking out of a soft tile
+export function PenguinMark({ className = "h-8 w-8" }: { className?: string }) {
+  return (
+    <span aria-hidden className={`relative inline-flex shrink-0 items-end justify-center overflow-hidden rounded-xl bg-[linear-gradient(160deg,#e9e4ff,#c9f3ff)] ring-1 ring-black/10 ${className}`}>
+      <HoodguinArt className="h-[92%] w-auto translate-y-[6%]" />
+    </span>
+  );
+}
 
 export function XIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -30,34 +41,35 @@ export function Nav() {
 
   return (
     <header className="fixed inset-x-0 top-3 z-50 px-3">
-      <nav className={`mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border-[3px] px-3 pl-5 transition-all duration-300 border-outline bg-white/90 backdrop-blur ${solid || open ? "shadow-[0_4px_0_#121212]" : ""}`}>
-        <a href="#top" className="flex items-center gap-2 font-display text-xl font-bold">
-          <span className="h-3 w-3 rounded-full border-2 border-outline bg-beak" />
-          hoodguins
-        </a>
-        <div className="hidden items-center gap-6 md:flex">
+      <nav className={`mx-auto flex h-14 max-w-6xl items-center justify-between rounded-2xl border border-surface/80 bg-surface/75 px-3 pl-3 backdrop-blur-xl transition-shadow duration-300 ${solid || open ? "shadow-[0_12px_40px_-16px_rgba(116,69,245,.45)]" : "shadow-[0_4px_20px_-12px_rgba(23,18,61,.25)]"}`}>
+        <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+          <PenguinMark />
+          <span className="grad-text">Guins</span>
+        </Link>
+        <div className="hidden items-center gap-1 md:flex">
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="font-semibold text-soft transition hover:text-flame">
+            <Link key={l.href} href={l.href} className="rounded-lg px-3 py-1.5 font-mono text-xs tracking-widest text-dim uppercase transition hover:bg-violet/10 hover:text-violet">
               {l.label}
-            </a>
+            </Link>
           ))}
-          <a href={X_URL} target="_blank" rel="noreferrer" className="btn btn-ink !px-3 !py-2 !shadow-[0_3px_0_#121212]" aria-label="Hoodguins on X">
+          <a href={X_URL} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm ml-2 !px-2.5" aria-label="Guins on X">
             <XIcon />
           </a>
+          <Link href="/#colony" className="btn btn-neon btn-sm">Join the colony</Link>
         </div>
-        <button className="btn btn-white !px-4 !py-1.5 text-sm md:hidden" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <button className="btn btn-ghost btn-sm md:hidden" onClick={() => setOpen(!open)} aria-expanded={open}>
           {open ? "close" : "menu"}
         </button>
       </nav>
       {open && (
-        <div className="pop-in mx-auto mt-2 flex max-w-6xl flex-col gap-1 rounded-[28px] border-[3px] border-outline bg-white p-4 shadow-[0_4px_0_#121212] md:hidden">
+        <div className="pop-in mx-auto mt-2 flex max-w-6xl flex-col gap-1 rounded-2xl border border-surface/80 bg-surface/90 p-3 shadow-[0_12px_40px_-16px_rgba(116,69,245,.45)] backdrop-blur-xl md:hidden">
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-2xl px-3 py-2 font-display text-2xl font-bold hover:bg-mist">
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2 font-display text-2xl font-bold hover:bg-violet/10">
               {l.label}
-            </a>
+            </Link>
           ))}
-          <a href={X_URL} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 px-3 font-semibold text-sm text-soft">
-            <XIcon /> @hoodguins
+          <a href={X_URL} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 px-3 font-mono text-xs text-dim">
+            <XIcon /> @{X_HANDLE}
           </a>
         </div>
       )}

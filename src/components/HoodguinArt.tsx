@@ -1,4 +1,4 @@
-// A Hoodguin drawn in SVG in the collection's style: bullet body, thick black
+// A Guin drawn in SVG in the collection's style: bullet body, thick black
 // outline, flat top lids over deadpan eyes, a wide diamond beak and two tufts.
 // The eyes follow `look` (-1..1 on each axis), and `asleep` closes them.
 
@@ -25,7 +25,7 @@ export function HoodguinArt({
   const lid = { transformBox: "fill-box" as const, transformOrigin: "top", transition: "transform .25s ease", transform: asleep ? "scaleY(0.12)" : "scaleY(1)" };
 
   return (
-    <svg viewBox="0 0 400 420" className={className} role="img" aria-label="A Hoodguin">
+    <svg viewBox="0 0 400 420" className={className} role="img" aria-label="A Guin">
       {/* Hood: sits behind the head */}
       {fit === "hood" && (
         <g>

@@ -1,21 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ColorWash } from "./ColorWash";
 
 // The living background: a glacier world under a sky that runs dawn → day →
-// sunset → night on a loop, with penguins messing around in the snow.
+// sunset → night → aurora on a loop. While the sun is down the whole site goes
+// dark: this sets data-night on <html>, and globals.css swaps the colours., with penguins messing around in the snow.
 
 const CYCLE_MS = 48000;
 
 type Key = { t: number; top: string; mid: string; bot: string; shade: string; night: number };
 const KEYS: Key[] = [
-  { t: 0.0, top: "#7a8fd6", mid: "#f6b2a6", bot: "#ffe2c4", shade: "#ffe6d8", night: 0.15 }, // dawn
-  { t: 0.12, top: "#4fb0ff", mid: "#9fd6ff", bot: "#e3f4ff", shade: "#ffffff", night: 0 }, // day
-  { t: 0.42, top: "#3fa4f7", mid: "#93d0ff", bot: "#e0f3ff", shade: "#ffffff", night: 0 },
-  { t: 0.54, top: "#5a4b9e", mid: "#f08a6c", bot: "#ffc785", shade: "#ffc9a6", night: 0.1 }, // sunset
-  { t: 0.64, top: "#0b1433", mid: "#1d2b5c", bot: "#34477e", shade: "#5566a8", night: 1 }, // night
-  { t: 0.9, top: "#0b1433", mid: "#1b2857", bot: "#30437a", shade: "#5566a8", night: 1 },
-  { t: 1.0, top: "#7a8fd6", mid: "#f6b2a6", bot: "#ffe2c4", shade: "#ffe6d8", night: 0.15 },
+  { t: 0.0, top: "#9d9cf5", mid: "#f3b8e0", bot: "#ffe6d6", shade: "#fff0f6", night: 0.15 }, // pastel dawn
+  { t: 0.25, top: "#7fb4ff", mid: "#c3dcff", bot: "#f0f4ff", shade: "#ffffff", night: 0 }, // soft day
+  { t: 0.48, top: "#8a8cf0", mid: "#c9b6ff", bot: "#f6e2ff", shade: "#f4ecff", night: 0.2 }, // lilac
+  { t: 0.57, top: "#5a4b9e", mid: "#f08a8c", bot: "#ffc9a6", shade: "#ffd2c4", night: 0.35 }, // sunset
+  { t: 0.65, top: "#070a24", mid: "#141a4a", bot: "#28306e", shade: "#5560b0", night: 1 }, // night
+  { t: 0.78, top: "#041226", mid: "#0c2c52", bot: "#1d5682", shade: "#5a86c0", night: 1 }, // aurora night
+  { t: 0.86, top: "#3a3f8f", mid: "#8a7fd0", bot: "#e6b8d8", shade: "#e6d8f4", night: 0.45 }, // first light
+  { t: 1.0, top: "#9d9cf5", mid: "#f3b8e0", bot: "#ffe6d6", shade: "#fff0f6", night: 0.15 }, // pastel dawn
 ];
 
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -62,6 +65,56 @@ function Penguin({ x = 0, y = 0, s = 1, hat }: { x?: number; y?: number; s?: num
   );
 }
 
+// A puffy cartoon cloud with a little face, drawn like the penguins: soft white,
+// thin dark outline, blush cheeks.
+type Face = "sleepy" | "happy" | "wink";
+function CuteCloud({ face }: { face: Face }) {
+  const ink = "#121212";
+  return (
+    <svg viewBox="0 0 120 70" className="h-auto w-full overflow-visible drop-shadow-[0_6px_10px_rgba(70,80,160,.18)]" aria-hidden>
+      <path
+        d="M22,60 C7,60 4,42 18,39 C15,25 33,17 43,27 C47,11 74,8 80,25 C90,16 107,23 104,38 C118,40 116,60 101,60 Z"
+        fill="#fff"
+        stroke={ink}
+        strokeWidth="2.6"
+        strokeLinejoin="round"
+      />
+      {/* soft shading along the bottom */}
+      <path d="M14,52 C30,58 90,58 108,51 C110,56 106,60 101,60 L22,60 C17,60 14,57 14,52 Z" fill="#dfe8ff" opacity=".7" />
+      <g stroke={ink} strokeWidth="2.2" strokeLinecap="round" fill="none">
+        {face === "happy" ? (
+          <>
+            <circle cx="50" cy="42" r="2.4" fill={ink} stroke="none" />
+            <circle cx="70" cy="42" r="2.4" fill={ink} stroke="none" />
+          </>
+        ) : face === "wink" ? (
+          <>
+            <circle cx="50" cy="42" r="2.4" fill={ink} stroke="none" />
+            <path d="M66,42 q4,-4 8,0" />
+          </>
+        ) : (
+          <>
+            <path d="M46,41 q4,4 8,0" />
+            <path d="M66,41 q4,4 8,0" />
+          </>
+        )}
+        <path d={face === "sleepy" ? "M57,49 q3,1.5 6,0" : "M56,47 q4,4.5 8,0"} />
+      </g>
+      <ellipse cx="41" cy="48" rx="4.5" ry="2.6" fill="#ff9db5" opacity=".65" />
+      <ellipse cx="79" cy="48" rx="4.5" ry="2.6" fill="#ff9db5" opacity=".65" />
+    </svg>
+  );
+}
+
+// Where each cloud floats: height on screen, size, how long one crossing takes, head start
+const CLOUDS: { top: string; w: string; speed: number; delay: number; face: Face }[] = [
+  { top: "7%", w: "9rem", speed: 80, delay: 10, face: "sleepy" },
+  { top: "16%", w: "6rem", speed: 62, delay: 40, face: "happy" },
+  { top: "28%", w: "7.5rem", speed: 95, delay: 70, face: "wink" },
+  { top: "11%", w: "5rem", speed: 70, delay: 55, face: "happy" },
+  { top: "22%", w: "10rem", speed: 110, delay: 5, face: "sleepy" },
+];
+
 export function Scene() {
   const root = useRef<HTMLDivElement>(null);
   const sun = useRef<HTMLDivElement>(null);
@@ -71,6 +124,23 @@ export function Scene() {
   // Day/night loop: writes CSS variables straight to the DOM each frame
   useEffect(() => {
     const el = root.current!;
+    const html = document.documentElement;
+    let night = false, fade = 0, first = true;
+    // Only touches the page when the sun actually crosses the horizon. Landing at
+    // night goes straight to dark; a sunset or sunrise you watch fades over a second.
+    const setNight = (on: boolean) => {
+      const was = first;
+      first = false;
+      if (on === night) return;
+      night = on;
+      if (!was) {
+        html.classList.add("theme-fade");
+        clearTimeout(fade);
+        fade = window.setTimeout(() => html.classList.remove("theme-fade"), 1100);
+      }
+      if (on) html.dataset.night = "";
+      else delete html.dataset.night;
+    };
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const start = performance.now() - CYCLE_MS * 0.2;
     let raf = 0;
@@ -86,7 +156,7 @@ export function Scene() {
       el.style.setProperty("--shade", mix(a.shade, b.shade, k));
       el.style.setProperty("--night", String(a.night + (b.night - a.night) * k));
 
-      // Sun rides 0 → 0.6, moon rides 0.55 → 1.05
+      // Sun rides 0.85 → 0.6 (wrapping through dawn), moon rides 0.55 → 0.95
       const arc = (p: number, node: HTMLDivElement | null) => {
         if (!node) return;
         const on = p >= 0 && p <= 1;
@@ -95,20 +165,36 @@ export function Scene() {
         node.style.left = `${6 + p * 88}%`;
         node.style.top = `${62 - Math.sin(Math.PI * p) * 52}%`;
       };
-      arc(t / 0.6, sun.current);
-      arc((((t - 0.55) % 1) + 1) % 1 / 0.5, moon.current);
+      const sunP = ((t + 0.15) % 1) / 0.75;
+      arc(sunP, sun.current);
+      setNight(sunP > 1);
+      arc((((t - 0.55) % 1) + 1) % 1 / 0.4, moon.current);
     };
 
+    const cleanup = () => {
+      clearTimeout(fade);
+      html.classList.remove("theme-fade");
+      delete html.dataset.night;
+    };
+    // ?sky=0.7 freezes the loop at that point (0 dawn, 0.25 day, 0.57 sunset, 0.7 night), for previews
+    const pinned = Number(new URLSearchParams(location.search).get("sky") ?? NaN);
+    if (pinned >= 0 && pinned < 1) {
+      paint(pinned);
+      return cleanup;
+    }
     if (still) {
-      paint(0.25);
-      return;
+      paint(0.3);
+      return cleanup;
     }
     const tick = (now: number) => {
       paint(((now - start) % CYCLE_MS) / CYCLE_MS);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      cleanup();
+    };
   }, []);
 
   // Snowfall
@@ -154,27 +240,33 @@ export function Scene() {
       {/* Sky */}
       <div className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--sky-top),var(--sky-mid)_55%,var(--sky-bot))]" />
 
-      {/* Stars + aurora, only at night */}
+      <ColorWash strength={0.5} />
+
+      {/* Stars + aurora */}
       <div className="absolute inset-0" style={{ opacity: "var(--night)" }}>
         {STARS.map((s, i) => (
           <span key={i} className="twinkle absolute rounded-full bg-white" style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.s, height: s.s, animationDelay: `${s.d}s` }} />
         ))}
-        <div className="aurora absolute top-[8%] left-[-10%] h-[38%] w-[70%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(110,255,190,.55),transparent)] blur-2xl" />
-        <div className="aurora absolute top-[4%] right-[-10%] h-[34%] w-[60%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(150,120,255,.45),transparent)] blur-2xl [animation-delay:-6s]" />
+        <div className="aurora absolute top-[8%] left-[-10%] h-[38%] w-[70%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(54,241,255,.5),transparent)] blur-2xl" />
+        <div className="aurora absolute top-[4%] right-[-10%] h-[34%] w-[60%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(255,79,216,.4),transparent)] blur-2xl [animation-delay:-6s]" />
       </div>
 
       {/* Sun and moon */}
-      <div ref={sun} style={{ opacity: 0 }} className="absolute h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#121212] bg-[#ffd84a] shadow-[0_0_80px_30px_rgba(255,214,90,.55)] transition-opacity duration-700 sm:h-28 sm:w-28" />
-      <div ref={moon} style={{ opacity: 0 }} className="absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#121212] bg-[#fff7e0] shadow-[0_0_60px_16px_rgba(255,247,224,.35)] transition-opacity duration-700 sm:h-20 sm:w-20">
-        <span className="absolute top-[28%] left-[26%] h-3 w-3 rounded-full bg-[#e8dcb8]" />
-        <span className="absolute top-[56%] left-[56%] h-4 w-4 rounded-full bg-[#e8dcb8]" />
+      <div ref={sun} style={{ opacity: 0 }} className="absolute h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[linear-gradient(to_bottom,#ffe27a,#ff7aa8_55%,#b44cff)] shadow-[0_0_90px_30px_rgba(255,79,216,.45)] [mask-image:repeating-linear-gradient(to_bottom,#000_0_62%,transparent_62%_70%,#000_70%_76%,transparent_76%_82%,#000_82%_86%,transparent_86%_92%,#000_92%)] transition-opacity duration-700 sm:h-36 sm:w-36" />
+      <div ref={moon} style={{ opacity: 0 }} className="absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_35%_35%,#ffffff,#d9d2ff_60%,#a99cff)] shadow-[0_0_70px_20px_rgba(160,140,255,.45)] transition-opacity duration-700 sm:h-20 sm:w-20">
+        <span className="absolute top-[28%] left-[26%] h-3 w-3 rounded-full bg-[#b9adf0]" />
+        <span className="absolute top-[56%] left-[56%] h-4 w-4 rounded-full bg-[#b9adf0]" />
       </div>
 
       {/* Clouds */}
-      <div className="absolute inset-0" style={{ opacity: "calc(1 - var(--night) * 0.65)" }}>
-      <div className="cloud absolute top-[12%] h-10 w-40 rounded-full bg-white/80 [animation-duration:70s]" />
-      <div className="cloud absolute top-[24%] h-8 w-28 rounded-full bg-white/70 [animation-duration:55s] [animation-delay:-30s]" />
-      <div className="cloud absolute top-[6%] h-12 w-52 rounded-full bg-white/60 [animation-duration:90s] [animation-delay:-60s]" />
+      <div className="absolute inset-0" style={{ opacity: "calc(1 - var(--night) * 0.5)" }}>
+      {CLOUDS.map((c, i) => (
+        <div key={i} className="cloud absolute" style={{ top: c.top, width: c.w, animationDuration: `${c.speed}s`, animationDelay: `-${c.delay}s` }}>
+          <div className="cloud-bob" style={{ animationDelay: `-${i * 0.7}s` }}>
+            <CuteCloud face={c.face} />
+          </div>
+        </div>
+      ))}
       </div>
 
       {/* The glacier world */}
@@ -261,6 +353,9 @@ export function Scene() {
       </div>
 
       <canvas ref={snow} className="absolute inset-0 h-full w-full" />
+
+      {/* Soft haze at the edges so the glass UI reads cleanly on top */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,transparent_40%,rgba(243,241,255,.45))]" />
     </div>
   );
 }

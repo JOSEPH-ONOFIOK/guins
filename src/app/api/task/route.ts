@@ -6,7 +6,9 @@ import { store } from "@/lib/store";
 // POST { task, ... } completes one task for the signed-in account.
 //   follow                           clicked follow
 //   engage  { action: like|repost }  done once both are clicked
+//   comment                          tagged friends + commented on the pinned post
 //   wallet  { wallet }               EVM address, one per account
+//   post                             shared their Guin on X
 export async function POST(req: Request) {
   try {
     const a = await authed(req);
@@ -25,18 +27,28 @@ export async function POST(req: Request) {
       if (entry.liked && entry.reposted) entry.done.engage ??= now;
     }
 
+    if (task === "comment") {
+      if (!entry.done.engage) return bad("Like and repost the pinned post first.");
+      entry.done.comment ??= now;
+    }
+
     if (task === "wallet") {
-      if (!entry.done.follow || !entry.done.engage) return bad("Finish the first two jobs first.");
+      if (!entry.done.follow || !entry.done.engage || !entry.done.comment) return bad("Finish the earlier tasks first.");
       const wallet = String(body.wallet ?? "").trim();
       if (!WALLET.test(wallet)) return bad("That isn't a valid EVM address. It starts with 0x followed by 40 characters.");
       const owner = await store.walletOwner(wallet);
-      if (owner && owner !== entry.handle.toLowerCase()) return bad("That wallet already belongs to another crew member.");
+      if (owner && owner !== entry.handle.toLowerCase()) return bad("That wallet already belongs to another colony member.");
       await store.claimWallet(wallet, entry.handle, entry.wallet);
       entry.wallet = wallet;
       if (!entry.done.wallet) {
         entry.done.wallet = now;
         entry.ip = ipHash(req);
       }
+    }
+
+    if (task === "post") {
+      if (!entry.done.wallet) return bad("Add your wallet first.");
+      entry.done.post ??= now;
     }
 
     entry.updatedAt = now;

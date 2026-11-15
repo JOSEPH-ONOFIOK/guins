@@ -66,11 +66,11 @@ export function newOAuth(to?: string): OAuthState {
 }
 
 // Where Connect X may send people back to. Anything else goes to the sign-up on the home page.
-const RETURN_PAGES: string[] = [];
+const RETURN_PAGES: string[] = ["/rpeng"];
 export const returnPage = (to: string | null | undefined) => (to && RETURN_PAGES.includes(to) ? to : "/");
 export const returnUrl = (origin: string, to: string | null | undefined, query: string) => {
   const page = returnPage(to);
-  return `${origin}${page}?${query}${page === "/" ? "#crew" : ""}`;
+  return `${origin}${page}?${query}${page === "/" ? "#colony" : "#airdrop"}`;
 };
 
 export function authorizeUrl(o: OAuthState, redirectUri: string) {

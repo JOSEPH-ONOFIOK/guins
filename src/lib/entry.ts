@@ -1,6 +1,8 @@
-// One crew sign-up and its tasks. Shared by the API routes and the UI.
+// One colony sign-up and its tasks. Shared by the API routes and the UI.
 
-export type TaskId = "follow" | "engage" | "wallet";
+import type { Airdrop } from "./airdrop";
+
+export type TaskId = "follow" | "engage" | "comment" | "wallet" | "post";
 
 export type Entry = {
   handle: string;
@@ -14,9 +16,11 @@ export type Entry = {
   liked?: boolean;
   reposted?: boolean;
   ip?: string;
+  // $RPENG airdrop application (/rpeng), separate from the colony tasks
+  ad?: Airdrop;
 };
 
-export const TASK_ORDER: TaskId[] = ["follow", "engage", "wallet"];
+export const TASK_ORDER: TaskId[] = ["follow", "engage", "comment", "wallet", "post"];
 export const isComplete = (e: Pick<Entry, "done">) => TASK_ORDER.every((t) => e.done[t]);
 
 export type PublicEntry = Omit<Entry, "xid" | "ip">;
@@ -38,6 +42,8 @@ export const X_URL = `https://x.com/${X_HANDLE}`;
 export const PINNED_POST = "";
 export const PINNED_ID = /\/status(?:es)?\/(\d+)/.exec(PINNED_POST)?.[1] ?? "";
 
+export type SignupRow = ReturnType<typeof signupRow>;
+
 export function signupRow(e: Entry) {
   const iso = (t?: number) => (t ? new Date(t).toISOString() : "");
   return {
@@ -46,7 +52,14 @@ export function signupRow(e: Entry) {
     complete: isComplete(e) ? "yes" : "no",
     followed: iso(e.done.follow),
     liked_reposted: iso(e.done.engage),
+    tagged_commented: iso(e.done.comment),
     wallet_at: iso(e.done.wallet),
+    posted: iso(e.done.post),
     joined_at: iso(e.createdAt),
+    updated_at: iso(e.updatedAt),
+    airdrop_wallet: e.ad?.appliedAt ? (e.ad.wallet ?? "") : "",
+    airdrop_qrt: e.ad?.qrtLink ?? "",
+    airdrop_invited_by: e.ad?.invitedBy ?? "",
+    airdrop_at: iso(e.ad?.appliedAt),
   };
 }
