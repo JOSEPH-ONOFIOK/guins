@@ -1,26 +1,286 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Hoodguins: clean white page in the art's own colours. Black outline,
+   white belly, beak yellow, a little flame red from the Don banner. */
+@theme {
+  --color-ink: #121212;
+  --color-outline: #121212;
+  --color-soft: #6b6b6b;
+  --color-mist: #f4f3ef;
+  --color-beak: #ffcf3f;
+  --color-flame: #e2492f;
+
+  --font-display: var(--font-fredoka), "Arial Rounded MT Bold", system-ui, sans-serif;
+  --font-body: var(--font-fredoka), system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  background: #9fd6ff;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-beak);
+  color: var(--color-ink);
+}
+
+/* Polka dots, very faint */
+.dots {
+  background-image: radial-gradient(rgba(18, 18, 18, 0.06) 2px, transparent 2.5px);
+  background-size: 28px 28px;
+}
+
+@layer components {
+/* Mochi panel: soft dough, plum outline, puffy offset shadow */
+.mochi {
+  background: #fff;
+  border: 3px solid var(--color-outline);
+  border-radius: 28px;
+  box-shadow: 0 6px 0 var(--color-outline);
+}
+
+/* Squishy button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  border: 3px solid var(--color-outline);
+  border-radius: 999px;
+  box-shadow: 0 5px 0 var(--color-outline);
+  padding: 0.7rem 1.4rem;
+  transition: transform 0.25s cubic-bezier(0.3, 1.8, 0.4, 1), box-shadow 0.15s ease, background 0.15s;
+  cursor: pointer;
+  user-select: none;
+}
+.btn:hover {
+  transform: translateY(-3px) scale(1.05, 0.97);
+  box-shadow: 0 8px 0 var(--color-outline);
+}
+.btn:active {
+  transform: translateY(4px) scale(1.08, 0.86);
+  box-shadow: 0 1px 0 var(--color-outline);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-beak { background: var(--color-beak); color: var(--color-ink); }
+.btn-white { background: #fff; color: var(--color-ink); }
+.btn-ink { background: var(--color-ink); color: #fff; }
+
+}
+
+/* Jelly wobble on tap */
+.jelly { transform-origin: 50% 100%; }
+.jelly.is-jiggling { animation: jelly 0.7s cubic-bezier(0.3, 1.4, 0.5, 1); }
+@keyframes jelly {
+  0% { transform: scale(1, 1); }
+  20% { transform: scale(1.18, 0.82); }
+  40% { transform: scale(0.9, 1.12); }
+  60% { transform: scale(1.06, 0.95); }
+  80% { transform: scale(0.98, 1.02); }
+  100% { transform: scale(1, 1); }
+}
+.squish-hover { transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.4, 1); }
+.squish-hover:hover { transform: translateY(-6px) scale(1.03, 0.98) rotate(var(--tilt, 0deg)); }
+
+/* Breathing idle, like dough rising */
+.breathe {
+  animation: breathe 3.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.035, 0.97); }
+}
+
+/* Floating things */
+.float {
+  animation: float 5s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-14px) rotate(calc(var(--r, 0deg) * -1)); }
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 36s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* 3D flip */
+.flip-scene { perspective: 1400px; }
+.flip-card {
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+.flip-card.is-flipped { transform: rotateY(180deg); }
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back { transform: rotateY(180deg); }
+
+.coin-3d { transform-style: preserve-3d; }
+.coin-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.zzz { animation: zzz 2.4s ease-in infinite; }
+@keyframes zzz {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(30px, -60px) scale(1.2); opacity: 0; }
+}
+
+.pop-in { animation: popin 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.5) both; }
+@keyframes popin {
+  from { transform: scale(0.5) translateY(8px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px) scale(0.97);
+  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+.reveal.in { opacity: 1; transform: none; }
+
+.twinkle { animation: twinkle 2.6s ease-in-out infinite; }
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.75) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(20deg); }
+}
+
+/* Hearts that float up when something is booped */
+.heart-pop { animation: heartpop 1s ease-out forwards; }
+@keyframes heartpop {
+  0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx, 0px)), -90px) scale(1.2) rotate(var(--rot, 0deg)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Headline letters rising in one by one */
+.rise {
+  display: inline-block;
+  animation: rise 0.8s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes rise {
+  from { transform: translateY(70%) scale(0.9, 1.15); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* Underline swoosh drawing itself */
+.draw { stroke-dasharray: 600; stroke-dashoffset: 600; animation: draw 1.1s 0.7s cubic-bezier(0.6, 0, 0.2, 1) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+
+/* ---------- Background world ---------- */
+.scene { --sky-top: #4fb0ff; --sky-mid: #9fd6ff; --sky-bot: #e3f4ff; --shade: #fff; --night: 0; }
+
+.aurora { animation: aurora 14s ease-in-out infinite alternate; }
+@keyframes aurora {
+  from { transform: translateX(0) skewX(-8deg) scaleY(1); }
+  to { transform: translateX(12%) skewX(10deg) scaleY(1.3); }
+}
+
+.cloud {
+  left: -15rem;
+  animation: cloud linear infinite;
+  box-shadow: 2.5rem -1rem 0 0.4rem rgba(255, 255, 255, 0.75), 5rem 0 0 0 rgba(255, 255, 255, 0.7);
+}
+@keyframes cloud { to { transform: translateX(calc(100vw + 30rem)); } }
+
+.hop, .throw-a, .throw-b, .waddle { transform-box: fill-box; }
+
+.sled { animation: sled 6s cubic-bezier(0.5, 0, 0.9, 0.6) infinite; }
+@keyframes sled {
+  0% { transform: translate(1380px, 588px); opacity: 0; }
+  8% { opacity: 1; }
+  62% { transform: translate(1100px, 676px); opacity: 1; }
+  70%, 100% { transform: translate(1070px, 690px); opacity: 0; }
+}
+
+.hop { transform-origin: 50% 100%; animation: hop 0.9s cubic-bezier(0.3, 0, 0.5, 1) infinite; }
+@keyframes hop {
+  0%, 100% { transform: translateY(0) scale(1.1, 0.9); }
+  15% { transform: translateY(0) scale(0.95, 1.08); }
+  50% { transform: translateY(-26px) scale(1, 1); }
+  85% { transform: translateY(0) scale(1.05, 0.95); }
+}
+
+.throw-a, .throw-b { transform-origin: 50% 100%; animation: throw 2.8s ease-in-out infinite; }
+.throw-b { animation-delay: -1.4s; }
+@keyframes throw {
+  0% { transform: rotate(-10deg) scale(1.05, 0.95); }
+  8% { transform: rotate(8deg) scale(0.97, 1.04); }
+  20%, 100% { transform: rotate(0) scale(1); }
+}
+
+.ball-x { animation: ball-x 1.4s linear infinite alternate; }
+@keyframes ball-x {
+  from { transform: translate(622px, 728px); }
+  to { transform: translate(838px, 732px); }
+}
+.ball-y { animation: ball-y 1.4s infinite; }
+@keyframes ball-y {
+  0% { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 0.6, 0.6, 1); }
+  50% { transform: translateY(-120px); animation-timing-function: cubic-bezier(0.4, 0, 0.7, 0.4); }
+  100% { transform: translateY(0); }
+}
+
+.walk { animation: walk 7s ease-in-out infinite alternate; }
+@keyframes walk {
+  from { transform: translate(440px, 772px); }
+  to { transform: translate(540px, 768px); }
+}
+.waddle { transform-origin: 50% 100%; animation: waddle 0.45s ease-in-out infinite alternate; }
+@keyframes waddle {
+  from { transform: rotate(-9deg); }
+  to { transform: rotate(9deg) translateY(-2px); }
+}
+
+.slide { animation: slide 9s linear infinite; }
+@keyframes slide {
+  from { transform: translate(-160px, 835px); }
+  to { transform: translate(1760px, 835px); }
+}
+.spray { animation: spray 0.4s ease-out infinite; }
+@keyframes spray {
+  from { transform: translate(0, 0); opacity: 1; }
+  to { transform: translate(-14px, -8px); opacity: 0.3; }
+}
+
+/* Sticker lettering: white fill with a black outline, readable on any sky */
+.sticker {
+  color: #fff;
+  -webkit-text-stroke: 0.09em #121212;
+  paint-order: stroke fill;
+  text-shadow: 0 0.06em 0 #121212;
 }
