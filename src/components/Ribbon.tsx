@@ -1,5 +1,5 @@
 // One scrolling ticker between the hero and the gang.
-const WORDS = ["guins", "the colony", "do not disturb", "$RPENG", "unbothered", "gm (grumpy morning)", "waddle together", "no smiling (ok maybe one)"];
+const WORDS = ["free mint", "guins", "the colony", "do not disturb", "$RPENG", "unbothered", "gm (grumpy morning)", "waddle together", "no smiling (ok maybe one)"];
 
 export function Ribbon() {
   const row = [...WORDS, ...WORDS];

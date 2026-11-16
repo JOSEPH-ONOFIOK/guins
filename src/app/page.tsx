@@ -12,7 +12,7 @@ export default function Home() {
       <Scene />
       <Nav />
       <main>
-        <Intro cta={{ label: "Get a Guin", href: "#apply" }} />
+        <Intro tagline="Free mint · The most unbothered penguins on-chain" cta={{ label: "Get a Guin", href: "#apply" }} />
         <Hero />
         <Ribbon />
         <Lineup />

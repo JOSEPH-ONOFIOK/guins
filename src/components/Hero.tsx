@@ -15,14 +15,14 @@ export function Hero() {
             {open ? "Applications open" : "Applications opening soon"}
           </p>
           <h2 className="mt-6 font-display text-[clamp(3.6rem,9vw,6.5rem)] leading-[0.88] font-bold tracking-tight uppercase">
-            Whitelist<span className="text-accent">.</span>
+            Free mint<span className="text-accent">.</span>
           </h2>
           <p className="mt-3 font-display text-[clamp(2rem,4.6vw,3.4rem)] leading-[0.95] font-bold text-accent uppercase">
             Join the
             <br />
             colony.
           </p>
-          <p className="mt-6 max-w-sm text-lg text-dim">Sign in with X. Complete the tasks. Submit your wallet.</p>
+          <p className="mt-6 max-w-sm text-lg text-dim">Get on the whitelist. Sign in with X, complete the tasks, submit your wallet.</p>
 
           <div className="mt-10 max-w-sm border-t border-line pt-6">
             <a href="#colony" className="group inline-flex items-center gap-4">

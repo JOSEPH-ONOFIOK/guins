@@ -10,8 +10,8 @@ const fredoka = Fredoka({ variable: "--font-fredoka", subsets: ["latin"] });
 const mono = JetBrains_Mono({ variable: "--font-jbmono", subsets: ["latin"] });
 
 const TITLE = "Guins · The colony";
-const DESCRIPTION = "The most unbothered little penguins on-chain. Join the whitelist, meet the gang and get ready for $RPENG.";
-const SHARE = { url: "/og.png", width: 1200, height: 630, alt: "Guins: the most unbothered penguins on-chain" };
+const DESCRIPTION = "Free mint. The most unbothered little penguins on-chain. Join the whitelist, meet the gang and get ready for $RPENG.";
+const SHARE = { url: "/og.png", width: 1200, height: 630, alt: "Guins: free mint. The most unbothered penguins on-chain" };
 
 // Favicon and home-screen icons come from src/app/favicon.ico, icon.png and apple-icon.png
 export const metadata: Metadata = {
