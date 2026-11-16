@@ -4,6 +4,9 @@
 whitelist application in a Google Sheet. One row per X handle, covering the
 colony tasks on the home page and the $RPENG airdrop on `/rpeng`.
 
+It also stores the two post links you set at `/admin` (pinned post, airdrop post)
+on a **Settings** tab, so the site doesn't need any other database for them.
+
 The site saves to its own storage first (Upstash, or a signed cookie before
 Upstash is connected) and then copies the row here in the background. Visitors
 never wait for the sheet, and if it goes down the site keeps working. Without
@@ -60,11 +63,17 @@ To check, open the web app URL with `?version` on the end. It shows the script
 version. `?stats` shows how many have applied, finished the whitelist, and
 applied for the airdrop.
 
-## Re-deploying after an edit
+## Re-deploying after an edit (do this now for version 2)
 
-A new deployment gets a new URL. To keep the existing one:
+Pasting new code into the editor isn't enough: the live URL keeps running the
+old version until you deploy. A *new deployment* gets a *new URL*, so update
+the existing one instead:
 
-**Deploy → Manage deployments → pencil icon → Version: New version → Deploy**
+1. Paste the whole new `Code.gs` over the old one and save.
+2. **Deploy → Manage deployments → pencil icon (edit) → Version: New version → Deploy**.
+3. Check: open the web app URL with `?version` on the end. It should say `{"version":2}`.
+
+The URL stays the same, so nothing changes in Vercel.
 
 ## What lands in the sheet
 
@@ -83,6 +92,11 @@ Sorting or filtering the tab is safe: rows are found by handle, never by
 position. Filled-in cells are kept, so someone who clears their browser and
 starts again keeps their row. Values that start like a formula (`=`, `+`, `-`,
 `@`) are stripped, so nobody can plant a formula in your sheet.
+
+**Settings** has the post links from `/admin`: `pinnedPost` and `airdropPost`,
+each with when it was last changed. Only X post links can be saved there. The
+site re-reads them every 30 seconds, so a change made straight in the sheet
+also shows up within half a minute.
 
 For exact invite counts, use the CSV export at `/api/admin/export?key=...`,
 which reads the site's own storage.

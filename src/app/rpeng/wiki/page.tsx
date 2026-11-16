@@ -5,9 +5,14 @@ import { ArrowIcon, Nav } from "@/components/Nav";
 import { Scene } from "@/components/Scene";
 import { Wiki } from "@/components/casino/Wiki";
 
+const DESC = "How to play every game in the colony casino: rules, odds, payouts, tips, glossary and FAQ.";
+const SHARE = { url: "/og-rpeng.png", width: 1200, height: 630, alt: "$RPENG: the colony's gold" };
 export const metadata: Metadata = {
   title: "Game wiki",
-  description: "How to play every game in the colony casino: rules, odds, payouts, tips, glossary and FAQ.",
+  description: DESC,
+  alternates: { canonical: "/rpeng/wiki" },
+  openGraph: { type: "article", url: "/rpeng/wiki", siteName: "Guins", title: "Game wiki · Guins", description: DESC, images: [SHARE] },
+  twitter: { card: "summary_large_image", site: "@hoodguins", title: "Game wiki · Guins", description: DESC, images: [SHARE] },
 };
 
 // Same night world as the rest of the site, already dimmed: this page is all reading.

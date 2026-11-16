@@ -5,22 +5,30 @@
  * home page) and the $RPENG airdrop (/rpeng). The site saves each change to its own
  * storage and sends the whole row here. Nothing is read back from this sheet.
  *
- * Contract with src/lib/mirror.ts:
+ * It also keeps the two post links an admin sets at /admin (the pinned post and
+ * the airdrop post) on a "Settings" tab, so the site needs no other database.
  *
- *   POST {action:"bulk", rows:[...]}  -> { saved }    adds or updates rows by X handle
- *   GET  ?version                     -> { version }
- *   GET  ?stats                       -> { applicants, whitelisted, airdrop }
+ * Contract with src/lib/mirror.ts and src/lib/links.ts:
+ *
+ *   POST {action:"bulk", rows:[...]}                   -> { saved }   adds or updates rows by X handle
+ *   POST {action:"links", pinnedPost, airdropPost}     -> { links }   saves the post links
+ *   GET  ?links                                        -> { links }   { pinnedPost, airdropPost }
+ *   GET  ?version                                      -> { version }
+ *   GET  ?stats                                        -> { applicants, whitelisted, airdrop }
  *
  * There is no secret: anyone with the web app URL can add rows, so keep the URL
- * private. It belongs only in the site's server settings.
+ * private. It belongs only in the site's server settings. (Links can only ever be
+ * set to X post links, so a leaked URL can't point the site anywhere else.)
  *
  * Setup is in README.md next to this file.
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 1;
+var SCRIPT_VERSION = 2;
 
 var TAB = 'Whitelist';
+var SETTINGS = 'Settings';
+var LINK_KEYS = ['pinnedPost', 'airdropPost'];
 
 /** Rows are written by header name, in this order. */
 var HEADERS = [
@@ -67,6 +75,7 @@ function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.version !== undefined) return json({ version: SCRIPT_VERSION });
   if (p.stats !== undefined) return json(stats());
+  if (p.links !== undefined) return json({ links: readLinks() });
   return json({ error: 'unknown request' });
 }
 
@@ -77,7 +86,7 @@ function doPost(e) {
   } catch (err) {
     return json({ error: 'bad request' });
   }
-  if (body.action !== 'bulk') return json({ error: 'unknown action' });
+  if (body.action !== 'bulk' && body.action !== 'links') return json({ error: 'unknown action' });
 
   var lock = LockService.getScriptLock();
   try {
@@ -86,6 +95,7 @@ function doPost(e) {
     return json({ error: 'busy' });
   }
   try {
+    if (body.action === 'links') return json({ links: writeLinks(body) });
     return json({ saved: saveAll(body.rows || []) });
   } catch (err) {
     return json({ error: String(err) });
@@ -147,6 +157,56 @@ function clean(v) {
   return String(v).replace(/^[=+\-@]+/, '').slice(0, 300);
 }
 
+// --- post links (Settings tab) -----------------------------------------------
+
+/** "" (clear) or a clean https://x.com/<user>/status/<id>; anything else is refused. */
+function postLink(v) {
+  v = String(v == null ? '' : v).trim();
+  if (!v) return '';
+  var m = /^(?:https?:\/\/)?(?:www\.|mobile\.)?(?:x|twitter)\.com\/(\w{1,15})\/status(?:es)?\/(\d{5,25})(?:[\/?#].*)?$/i.exec(v);
+  if (!m) throw new Error('not an X post link: ' + v.slice(0, 80));
+  return 'https://x.com/' + m[1] + '/status/' + m[2];
+}
+
+function settingsTab() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), sheet = ss.getSheetByName(SETTINGS);
+  if (!sheet) {
+    sheet = ss.insertSheet(SETTINGS);
+    sheet.getRange(1, 1, 1, 3).setValues([['Setting', 'Value', 'Updated At']]).setFontWeight('bold').setBackground('#ede8ff');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function readLinks() {
+  var sheet = settingsTab(), last = sheet.getLastRow(), out = { pinnedPost: '', airdropPost: '' };
+  if (last < 2) return out;
+  var values = sheet.getRange(2, 1, last - 1, 2).getValues();
+  for (var i = 0; i < values.length; i++) {
+    var k = String(values[i][0]);
+    if (LINK_KEYS.indexOf(k) >= 0) out[k] = String(values[i][1]);
+  }
+  return out;
+}
+
+/** Saves whichever of the two links the body carries; returns the links as stored. */
+function writeLinks(body) {
+  var sheet = settingsTab(), now = new Date().toISOString();
+  var current = readLinks(), last = sheet.getLastRow();
+  var rows = last > 1 ? sheet.getRange(2, 1, last - 1, 1).getValues().map(function (r) { return String(r[0]); }) : [];
+  for (var i = 0; i < LINK_KEYS.length; i++) {
+    var k = LINK_KEYS[i];
+    if (!(k in body)) continue;
+    var v = postLink(body[k]);
+    var at = rows.indexOf(k);
+    var number = at >= 0 ? at + 2 : sheet.getLastRow() + 1;
+    if (at < 0) rows.push(k);
+    sheet.getRange(number, 1, 1, 3).setNumberFormat('@').setValues([[k, v, now]]);
+    current[k] = v;
+  }
+  return current;
+}
+
 // --- reads ----------------------------------------------------------------
 
 function stats() {
@@ -206,6 +266,16 @@ function selfTest() {
   Logger.log('formula blocked: ' + safe);
   Logger.log('stats          : ' + JSON.stringify(stats()));
 
-  var ok = first.saved === 1 && second.saved === 1 && once && whitelisted && safe;
+  // Post links: save a test link, read it back, then put the real ones back
+  var real = readLinks();
+  writeLinks({ pinnedPost: 'twitter.com/hoodguins/status/1234567890?s=20' });
+  var linkOk = readLinks().pinnedPost === 'https://x.com/hoodguins/status/1234567890';
+  var refused = false;
+  try { writeLinks({ airdropPost: 'https://evil.example/phish' }); } catch (err) { refused = true; }
+  writeLinks(real);
+  Logger.log('links saved    : ' + linkOk);
+  Logger.log('bad link refused: ' + refused);
+
+  var ok = first.saved === 1 && second.saved === 1 && once && whitelisted && safe && linkOk && refused;
   Logger.log(ok ? 'PASS. Delete the "selftest" row before going live.' : 'FAIL. See the lines above.');
 }

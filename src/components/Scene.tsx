@@ -203,9 +203,9 @@ export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32]
   const lipRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
-  const farRef = useRef<SVGGElement>(null);
-  const midRef = useRef<SVGGElement>(null);
-  const frontRef = useRef<SVGGElement>(null);
+  const farRef = useRef<HTMLDivElement>(null);
+  const midRef = useRef<HTMLDivElement>(null);
+  const frontRef = useRef<HTMLDivElement>(null);
 
   // Night sky loop: writes CSS variables straight to the DOM each frame
   useEffect(() => {
@@ -244,8 +244,22 @@ export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32]
     const set = (n: HTMLElement | SVGGElement | null, tf: string) => {
       if (n) n.style.transform = tf;
     };
+    // Screen height for the fly-through, re-measured only when the width changes:
+    // on phones the address bar showing/hiding changes innerHeight mid-scroll,
+    // which would make every layer jump.
+    let vh = window.innerHeight, vw = window.innerWidth, lastP = -1;
+    const onResize = () => {
+      if (window.innerWidth !== vw) {
+        vw = window.innerWidth;
+        vh = window.innerHeight;
+        lastP = -1;
+        fly();
+      }
+    };
     const fly = () => {
-      const p = calm ? 1 : clamp01(window.scrollY / (window.innerHeight * 0.7));
+      const p = calm ? 1 : clamp01(window.scrollY / (vh * 0.45));
+      if (p === lastP) return; // nothing moved: leave the layers alone
+      lastP = p;
       html.style.setProperty("--intro", p.toFixed(4));
       el.style.setProperty("--veil-o", clamp01((p - 0.15) / 0.7).toFixed(4));
       set(lipRef.current, `translateY(${-p * 110}%) scale(${1 + p * 0.4})`);
@@ -262,14 +276,20 @@ export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32]
       if (calm) fly();
       return cleanup;
     }
+    // The fly-through follows the scroll event itself, so the layers move in the
+    // same frame as the page (reading it from the sky loop could lag a frame and shake)
+    fly();
+    window.addEventListener("scroll", fly, { passive: true });
+    window.addEventListener("resize", onResize);
     const tick = (now: number) => {
       paint(isPinned ? pinned : ((now - start) % CYCLE_MS) / CYCLE_MS);
-      fly();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", fly);
+      window.removeEventListener("resize", onResize);
       cleanup();
     };
   }, [calm, moonC, moonSwing]);
@@ -346,9 +366,11 @@ export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32]
       ))}
       </div>
 
-      {/* The glacier world */}
+      {/* The glacier world: three stacked layers (far, mid, front) the GPU can slide
+          for the fly-through without repainting the drawing */}
       <div className="absolute inset-x-0 bottom-0 h-[62%]">
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full">
+        <div ref={farRef} className="absolute inset-0 origin-bottom will-change-transform">
+          <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full">
           <defs>
             <clipPath id="land"><path d="M0,520 L120,360 L210,430 L330,250 L450,410 L560,300 L690,440 L800,230 L930,420 L1040,320 L1170,450 L1290,270 L1420,420 L1530,340 L1600,400 L1600,900 L0,900 Z" /></clipPath>
           </defs>
@@ -360,23 +382,47 @@ export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32]
               <path d="M0,720 C200,690 380,740 600,715 C820,690 1000,735 1200,720 C1380,706 1500,730 1600,722 L1600,900 L0,900 Z" />
             </clipPath>
           </defs>
-          {/* Each layer carries its own time-of-day tint, so the tint moves with it */}
-          <g ref={farRef} style={{ transformBox: "view-box", transformOrigin: "800px 900px" }}>
           {/* Far glacier peaks */}
           <path d="M0,520 L120,360 L210,430 L330,250 L450,410 L560,300 L690,440 L800,230 L930,420 L1040,320 L1170,450 L1290,270 L1420,420 L1530,340 L1600,400 L1600,900 L0,900 Z" fill="#d6ebfb" stroke="#121212" strokeWidth="3" strokeLinejoin="round" />
           <path d="M330,250 L370,330 L340,320 L310,380 L300,290 Z M800,230 L850,320 L812,305 L790,370 L770,280 Z M1290,270 L1335,350 L1300,338 L1280,395 L1262,310 Z" fill="#fff" />
           <path d="M800,230 L930,420 L860,420 L840,340 Z M330,250 L450,410 L390,410 L370,320 Z M1290,270 L1420,420 L1350,420 L1330,330 Z" fill="#b5d6ef" />
           <rect x="-200" y="0" width="2000" height="900" clipPath="url(#land)" style={{ fill: "var(--shade)", mixBlendMode: "multiply" }} />
-          </g>
-          <g ref={midRef} style={{ transformBox: "view-box", transformOrigin: "800px 900px" }}>
+          </svg>
+        </div>
+        <div ref={midRef} className="absolute inset-0 origin-bottom will-change-transform">
+          <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full">
+          <defs>
+            <clipPath id="land"><path d="M0,520 L120,360 L210,430 L330,250 L450,410 L560,300 L690,440 L800,230 L930,420 L1040,320 L1170,450 L1290,270 L1420,420 L1530,340 L1600,400 L1600,900 L0,900 Z" /></clipPath>
+          </defs>
+          <defs>
+            <clipPath id="cliffs"><path d="M0,610 L90,560 L260,575 L300,520 L470,540 L520,600 L700,585 L760,540 L960,555 L1010,605 L1180,590 L1240,530 L1430,550 L1480,600 L1600,585 L1600,900 L0,900 Z" /></clipPath>
+            <clipPath id="ground">
+              <path d="M1060,700 C1160,620 1260,600 1380,610 C1480,620 1560,660 1600,690 L1600,900 L1060,900 Z" />
+              <path d="M250,730 C250,640 410,640 410,730 Z" />
+              <path d="M0,720 C200,690 380,740 600,715 C820,690 1000,735 1200,720 C1380,706 1500,730 1600,722 L1600,900 L0,900 Z" />
+            </clipPath>
+          </defs>
           {/* Glacier cliffs */}
           <path d="M0,610 L90,560 L260,575 L300,520 L470,540 L520,600 L700,585 L760,540 L960,555 L1010,605 L1180,590 L1240,530 L1430,550 L1480,600 L1600,585 L1600,900 L0,900 Z" fill="#eaf6ff" stroke="#121212" strokeWidth="3" strokeLinejoin="round" />
           <g stroke="#9cc8e6" strokeWidth="3" strokeLinecap="round" fill="none">
             <path d="M310,540 L320,590 M360,545 L355,600 M780,555 L790,600 M840,560 L835,610 M1260,545 L1268,595 M1320,552 L1312,600" />
           </g>
           <rect x="-200" y="0" width="2000" height="900" clipPath="url(#cliffs)" style={{ fill: "var(--shade)", mixBlendMode: "multiply" }} />
-          </g>
-          <g ref={frontRef} style={{ transformBox: "view-box", transformOrigin: "800px 900px" }}>
+          </svg>
+        </div>
+        <div ref={frontRef} className="absolute inset-0 origin-bottom will-change-transform">
+          <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 h-full w-full">
+          <defs>
+            <clipPath id="land"><path d="M0,520 L120,360 L210,430 L330,250 L450,410 L560,300 L690,440 L800,230 L930,420 L1040,320 L1170,450 L1290,270 L1420,420 L1530,340 L1600,400 L1600,900 L0,900 Z" /></clipPath>
+          </defs>
+          <defs>
+            <clipPath id="cliffs"><path d="M0,610 L90,560 L260,575 L300,520 L470,540 L520,600 L700,585 L760,540 L960,555 L1010,605 L1180,590 L1240,530 L1430,550 L1480,600 L1600,585 L1600,900 L0,900 Z" /></clipPath>
+            <clipPath id="ground">
+              <path d="M1060,700 C1160,620 1260,600 1380,610 C1480,620 1560,660 1600,690 L1600,900 L1060,900 Z" />
+              <path d="M250,730 C250,640 410,640 410,730 Z" />
+              <path d="M0,720 C200,690 380,740 600,715 C820,690 1000,735 1200,720 C1380,706 1500,730 1600,722 L1600,900 L0,900 Z" />
+            </clipPath>
+          </defs>
           {/* Sled hill */}
           <path d="M1060,700 C1160,620 1260,600 1380,610 C1480,620 1560,660 1600,690 L1600,900 L1060,900 Z" fill="#f6fbff" stroke="#121212" strokeWidth="3" />
           {/* Igloo */}
@@ -442,21 +488,21 @@ export function Scene({ dark = false, calm = false, moon: moonPath = [0.5, 0.32]
             </g>
           </g>
 
-          </g>
-        </svg>
+          </svg>
+        </div>
       </div>
 
       {/* The ice frame, dimmed at night with the rest of the world */}
       <div className="absolute inset-0">
-        <div ref={leftRef} className="absolute bottom-0 left-0 h-[44vh] max-w-[30vw] origin-bottom-left sm:h-[78vh] sm:max-w-[40vw]">
+        <div ref={leftRef} className="absolute bottom-0 left-0 h-[44vh] max-w-[30vw] origin-bottom-left will-change-transform sm:h-[78vh] sm:max-w-[40vw]">
           <PineWall id="pines-l" />
         </div>
-        <div ref={rightRef} className="absolute right-0 bottom-0 h-[44vh] max-w-[30vw] origin-bottom-right sm:h-[78vh] sm:max-w-[40vw]">
+        <div ref={rightRef} className="absolute right-0 bottom-0 h-[44vh] max-w-[30vw] origin-bottom-right will-change-transform sm:h-[78vh] sm:max-w-[40vw]">
           <div className="h-full -scale-x-100">
             <PineWall id="pines-r" />
           </div>
         </div>
-        <div ref={lipRef} className="absolute inset-x-0 top-0 h-[14vh] min-h-20 origin-top sm:h-[20vh] sm:min-h-28">
+        <div ref={lipRef} className="absolute inset-x-0 top-0 h-[14vh] min-h-20 origin-top will-change-transform sm:h-[20vh] sm:min-h-28">
           <IceLip />
         </div>
       </div>

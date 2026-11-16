@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { AIRDROP_POST, AIRDROP_POST_ID, AIRDROP_SHARE, qrtText, refLink } from "@/lib/airdrop";
+import { AIRDROP_SHARE, qrtText, refLink } from "@/lib/airdrop";
 import { WALLET, X_HANDLE, X_URL, type PublicEntry } from "@/lib/entry";
 import { AUTH_ERRORS } from "./Crew";
 import { Icon } from "./Icon";
@@ -11,7 +11,6 @@ import { XIcon } from "./Nav";
 // your invite link (checked on X), then drop your wallet.
 
 const REF_KEY = "guins_ad_ref";
-const POST_URL = AIRDROP_POST || X_URL;
 const openX = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 const intent = (kind: string, q: Record<string, string>) => `https://x.com/intent/${kind}?${new URLSearchParams(q)}`;
 
@@ -39,6 +38,8 @@ export function Airdrop() {
   const [notice, setNotice] = useState<{ text: string; bad?: boolean } | null>(null);
   const [stats, setStats] = useState<{ applied: number; invites: number } | null>(null);
   const [devHandle, setDevHandle] = useState("");
+  // The airdrop post comes from the server (an admin can change it at /admin)
+  const [post, setPost] = useState({ url: "", id: "" });
   const [link, setLink] = useState("");
   const [wallet, setWallet] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -59,6 +60,7 @@ export function Airdrop() {
       .then((d) => {
         setEntry(d.entry);
         setAuth(d.auth);
+        setPost({ url: d.links?.airdropPost ?? "", id: d.links?.airdropId ?? "" });
       })
       .catch(() => {})
       .finally(() => {
@@ -121,7 +123,8 @@ export function Airdrop() {
   };
 
   const myLink = entry ? refLink(entry.handle) : "";
-  const text = entry ? qrtText(entry.handle, X_HANDLE) : "";
+  const postUrl = post.url || X_URL;
+  const text = entry ? qrtText(entry.handle, X_HANDLE, !!post.id) : "";
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(`https://${myLink}`);
@@ -212,7 +215,7 @@ export function Airdrop() {
                       <button
                         className={`btn btn-sm ${ad?.commented ? "btn-ghost !text-mint" : "btn-accent"}`}
                         onClick={() => {
-                          openX(AIRDROP_POST_ID ? intent("post", { in_reply_to: AIRDROP_POST_ID, text: "Applying for the $RPENG airdrop 🐧" }) : POST_URL);
+                          openX(post.id ? intent("post", { in_reply_to: post.id, text: "Applying for the $RPENG airdrop 🐧" }) : postUrl);
                           step({ step: "engage", action: "comment" }, "comment");
                         }}
                       >
@@ -221,13 +224,13 @@ export function Airdrop() {
                       <button
                         className={`btn btn-sm ${ad?.reposted ? "btn-ghost !text-mint" : "btn-accent"}`}
                         onClick={() => {
-                          openX(AIRDROP_POST_ID ? intent("retweet", { tweet_id: AIRDROP_POST_ID }) : POST_URL);
+                          openX(post.id ? intent("retweet", { tweet_id: post.id }) : postUrl);
                           step({ step: "engage", action: "repost" }, "repost");
                         }}
                       >
                         <Icon name="repost" className="h-4 w-4" /> {ad?.reposted ? "Retweeted" : "Retweet"}
                       </button>
-                      <a href={POST_URL} target="_blank" rel="noreferrer" className="font-mono text-xs text-dim underline">view post</a>
+                      <a href={postUrl} target="_blank" rel="noreferrer" className="font-mono text-xs text-dim underline">view post</a>
                     </div>
                   )}
                 </Step>
@@ -239,13 +242,13 @@ export function Airdrop() {
                     <a href={ad.qrtLink} target="_blank" rel="noreferrer" className="font-mono text-sm text-mint underline">see your quote</a>
                   ) : (
                     <>
-                      <p className="text-sm text-dim">{AIRDROP_POST_ID ? "Quote the airdrop post with this text. Keep your invite link in it." : `Post this on X. It must tag @${X_HANDLE} and keep your invite link.`}</p>
+                      <p className="text-sm text-dim">{post.id ? "Quote the airdrop post with this text. Keep your invite link in it." : `Post this on X. It must tag @${X_HANDLE} and keep your invite link.`}</p>
                       <p className="mt-2 rounded-xl border border-dashed border-line bg-black/20 px-3 py-2 font-mono text-xs whitespace-pre-line">{text}</p>
                       <button
                         className="btn btn-gold btn-sm mt-3"
-                        onClick={() => openX(intent("post", AIRDROP_POST_ID ? { text, url: AIRDROP_POST } : { text }))}
+                        onClick={() => openX(intent("post", post.id ? { text, url: post.url } : { text }))}
                       >
-                        <XIcon /> {AIRDROP_POST_ID ? "Quote on X" : "Post on X"}
+                        <XIcon /> {post.id ? "Quote on X" : "Post on X"}
                       </button>
                       <form onSubmit={(e) => (e.preventDefault(), step({ step: "qrt", link }, "qrt"))} className="mt-3 flex flex-col gap-2 sm:flex-row">
                         <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://x.com/you/status/…" spellCheck={false} className="field" />

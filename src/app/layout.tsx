@@ -9,20 +9,25 @@ import { SmoothScroll } from "@/components/SmoothScroll";
 const fredoka = Fredoka({ variable: "--font-fredoka", subsets: ["latin"] });
 const mono = JetBrains_Mono({ variable: "--font-jbmono", subsets: ["latin"] });
 
-const TITLE = "Guins";
-const DESCRIPTION = "The most unbothered little penguins on-chain. Meet the gang, flip some $RPENG and join the colony.";
+const TITLE = "Guins · The colony";
+const DESCRIPTION = "The most unbothered little penguins on-chain. Join the whitelist, meet the gang and get ready for $RPENG.";
+const SHARE = { url: "/og.png", width: 1200, height: 630, alt: "Guins: the most unbothered penguins on-chain" };
 
+// Favicon and home-screen icons come from src/app/favicon.ico, icon.png and apple-icon.png
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: TITLE, template: "%s · Guins" },
   description: DESCRIPTION,
-  applicationName: TITLE,
-  keywords: ["Guins", "$RPENG", "penguin", "NFT", "PFP", "colony", "allowlist"],
-  openGraph: { type: "website", url: "/", siteName: TITLE, title: TITLE, description: DESCRIPTION, images: ["/hg/gold.png"] },
-  twitter: { card: "summary_large_image", site: "@hoodguins", creator: "@hoodguins", title: TITLE, description: DESCRIPTION, images: ["/hg/gold.png"] },
+  applicationName: "Guins",
+  keywords: ["Guins", "Hoodguins", "$RPENG", "penguin", "NFT", "PFP", "colony", "whitelist", "allowlist", "airdrop"],
+  alternates: { canonical: "/" },
+  openGraph: { type: "website", url: "/", siteName: "Guins", locale: "en_US", title: TITLE, description: DESCRIPTION, images: [SHARE] },
+  twitter: { card: "summary_large_image", site: "@hoodguins", creator: "@hoodguins", title: TITLE, description: DESCRIPTION, images: [SHARE] },
+  appleWebApp: { title: "Guins", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
 };
 
-export const viewport: Viewport = { themeColor: "#0b0a12" };
+export const viewport: Viewport = { themeColor: "#0b0a12", colorScheme: "dark light" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

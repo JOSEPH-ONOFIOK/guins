@@ -5,7 +5,7 @@ export function Ribbon() {
   const row = [...WORDS, ...WORDS];
   return (
     <div
-      className="relative overflow-hidden border-y border-line bg-void/85 py-3.5 text-accent backdrop-blur-md"
+      className="relative overflow-hidden border-y border-line bg-void/95 py-3.5 text-accent"
       aria-label="Guins. The colony."
     >
       <div className="marquee">

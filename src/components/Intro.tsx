@@ -17,15 +17,15 @@ export function Intro({
   next?: string;
 }) {
   return (
-    <section id="top" aria-label={title} className="relative h-[165svh] overflow-x-clip">
+    <section id="top" aria-label={title} className="relative h-[120svh] overflow-x-clip">
       <div
-        className="sticky top-0 flex h-[100svh] flex-col items-center justify-center px-4 pt-16 pb-[16vh] text-center"
+        className="sticky top-0 flex h-[100svh] flex-col items-center justify-center px-4 pt-16 pb-[16vh] text-center will-change-[transform,opacity]"
         style={{ opacity: "calc(1 - var(--intro, 0) * 1.8)", transform: "translateY(calc(var(--intro, 0) * -12vh)) scale(calc(1 + var(--intro, 0) * 0.18))" }}
       >
         {art}
         <p className="cloud-type pop-in text-[clamp(1rem,2.6vw,1.9rem)] tracking-[0.3em] uppercase">{eyebrow}</p>
         <h1 className="cloud-type pop-in -mt-1 text-[clamp(4rem,16vw,13rem)] leading-[0.85] [animation-delay:.15s]">{title}</h1>
-        <p className="pop-in mt-6 max-w-[90vw] rounded-full bg-black/25 px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] text-white uppercase backdrop-blur-sm [animation-delay:.4s] sm:text-xs">
+        <p className="pop-in mt-6 max-w-[90vw] rounded-full bg-black/45 px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] text-white uppercase [animation-delay:.4s] sm:text-xs">
           {tagline}
         </p>
         <a

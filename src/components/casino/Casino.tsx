@@ -142,7 +142,7 @@ export function Casino() {
       </div>
 
       {/* The table */}
-      <div className="felt relative mx-3 rounded-[22px] px-4 py-8 sm:mx-4 sm:px-8">
+      <div className="felt relative mx-3 rounded-[22px] px-4 py-6 sm:mx-4 sm:px-8">
         {GAMES_LOCKED && <ChainLock />}
         {/* While locked the game shows but its buttons are off */}
         <Game bet={bet} busy={busy || GAMES_LOCKED} start={start} settle={settle} />

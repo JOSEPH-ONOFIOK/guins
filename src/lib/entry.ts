@@ -37,10 +37,9 @@ export const HANDLE = /^\w{1,15}$/;
 export const X_HANDLE = "hoodguins";
 export const X_URL = `https://x.com/${X_HANDLE}`;
 
-// The post people like and repost. Empty until it's up: the buttons open the
-// profile instead. Paste the post's status link here and they switch to it.
+// The post people like, repost and reply to. This is the fallback: an admin can
+// set or change it at /admin (src/lib/links.ts). Empty = the buttons open the profile.
 export const PINNED_POST = "";
-export const PINNED_ID = /\/status(?:es)?\/(\d+)/.exec(PINNED_POST)?.[1] ?? "";
 
 export type SignupRow = ReturnType<typeof signupRow>;
 

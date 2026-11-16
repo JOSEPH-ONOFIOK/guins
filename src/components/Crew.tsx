@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { PINNED_ID, X_HANDLE, X_URL, isComplete, type PublicEntry } from "@/lib/entry";
+import { X_HANDLE, X_URL, isComplete, type PublicEntry } from "@/lib/entry";
 import { HoodguinArt } from "./HoodguinArt";
 import { Icon } from "./Icon";
 import { ArrowIcon, XIcon } from "./Nav";
@@ -38,9 +38,10 @@ function crewNo(handle: string) {
   return String((h % 9000) + 1000);
 }
 
-const intent = (kind: "like" | "retweet") => (PINNED_ID ? `https://x.com/intent/${kind}?tweet_id=${PINNED_ID}` : X_URL);
+// The pinned post comes from the server (an admin can change it); no post yet = the profile
+const intent = (pinnedId: string, kind: "like" | "retweet") => (pinnedId ? `https://x.com/intent/${kind}?tweet_id=${pinnedId}` : X_URL);
 // Opens a reply to the pinned post so they can tag friends and comment
-const replyIntent = () => (PINNED_ID ? `https://x.com/intent/post?in_reply_to=${PINNED_ID}&text=${encodeURIComponent("Waddling in with ")}` : X_URL);
+const replyIntent = (pinnedId: string) => (pinnedId ? `https://x.com/intent/post?in_reply_to=${pinnedId}&text=${encodeURIComponent("Waddling in with ")}` : X_URL);
 const open = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
 function Check() {
@@ -83,6 +84,7 @@ export function Crew() {
   const [busy, setBusy] = useState<string | null>(null);
   const [wallet, setWallet] = useState("");
   const [devHandle, setDevHandle] = useState("");
+  const [pinnedId, setPinnedId] = useState("");
   // Which step is on screen. null = the next one to do.
   const [view, setView] = useState<number | null>(null);
 
@@ -92,6 +94,7 @@ export function Crew() {
       .then((d) => {
         setEntry(d.entry);
         setAuth(d.auth);
+        setPinnedId(d.links?.pinnedId ?? "");
         if (d.entry?.wallet) setWallet(d.entry.wallet);
       })
       .catch(() => setAuth("off"))
@@ -201,7 +204,7 @@ export function Crew() {
             {(["like", "repost"] as const).map((a) => {
               const did = a === "like" ? entry?.liked : entry?.reposted;
               return (
-                <Action key={a} ghost={did} disabled={busy === a} onClick={() => (open(intent(a === "like" ? "like" : "retweet")), task({ task: "engage", action: a }, a))}>
+                <Action key={a} ghost={did} disabled={busy === a} onClick={() => (open(intent(pinnedId, a === "like" ? "like" : "retweet")), task({ task: "engage", action: a }, a))}>
                   {did ? "✓ " : <Icon name={a === "like" ? "heart" : "repost"} className="h-4 w-4" />}
                   {a}
                 </Action>
@@ -219,7 +222,7 @@ export function Crew() {
         <>
           <Note>Reply under the pinned post, tag a friend or two, and drop a comment.</Note>
           <div className="mt-6">
-            <Action disabled={busy === "comment"} onClick={() => (open(replyIntent()), task({ task: "comment" }, "comment"))}>
+            <Action disabled={busy === "comment"} onClick={() => (open(replyIntent(pinnedId)), task({ task: "comment" }, "comment"))}>
               <Icon name="comment" className="h-4 w-4" /> Comment on X
             </Action>
           </div>

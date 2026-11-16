@@ -1,10 +1,10 @@
 import { connection } from "next/server";
 import { authed, bad } from "@/lib/api";
-import { AIRDROP_POST_ID } from "@/lib/airdrop";
 import { getSession } from "@/lib/auth";
 import { HANDLE, WALLET, X_HANDLE, toPublic } from "@/lib/entry";
 import { hasDatabase, redis, store } from "@/lib/store";
 import { verifyAirdropQrt } from "@/lib/xpost";
+import { getLinks, postId } from "@/lib/links";
 
 // $RPENG airdrop application. Steps must go in order:
 //   follow                             clicked follow on our X account
@@ -62,7 +62,7 @@ async function run(req: Request) {
     case "qrt": {
       const no = needEngage();
       if (no) return no;
-      const r = await verifyAirdropQrt(String(body.link ?? ""), entry.handle, AIRDROP_POST_ID);
+      const r = await verifyAirdropQrt(String(body.link ?? ""), entry.handle, postId((await getLinks()).airdropPost));
       if (!r.ok) return bad(r.error);
       ad.qrtLink = r.link;
       break;

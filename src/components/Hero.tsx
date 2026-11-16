@@ -8,7 +8,7 @@ export function Hero() {
   const open = authMode !== "off";
   return (
     <section id="apply" className="relative">
-      <div className="mx-auto grid min-h-[100svh] max-w-6xl items-center gap-12 px-4 pt-24 pb-20 sm:px-8 lg:grid-cols-[1fr_minmax(0,34rem)] lg:gap-16">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-10 pb-16 sm:px-8 lg:grid-cols-[1fr_minmax(0,34rem)] lg:gap-16">
         <Reveal>
           <p className="chip">
             <span className="glow-dot h-1.5 w-1.5 rounded-full bg-accent" />

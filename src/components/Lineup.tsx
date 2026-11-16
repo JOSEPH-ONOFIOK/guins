@@ -68,7 +68,7 @@ export function Lineup() {
   };
 
   return (
-    <section id="gang" className="relative scroll-mt-20 py-20 sm:py-28">
+    <section id="gang" className="relative scroll-mt-20 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-4">
           <div>

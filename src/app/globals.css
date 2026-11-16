@@ -27,7 +27,7 @@
 
 /* Surfaces, as variables so a section (the casino) can pin its own */
 :root {
-  --panel: rgba(19, 18, 29, 0.86);
+  --panel: rgba(19, 18, 29, 0.92);
   --well: rgba(255, 255, 255, 0.04);
   --ghost: rgba(255, 255, 255, 0.04);
   --ghost-line: rgba(255, 255, 255, 0.18);
@@ -102,8 +102,8 @@ html[data-light] .text-accent:not(.casino *) { color: var(--color-amber); }
       var(--edge) border-box;
     border: 1px solid transparent;
     border-radius: 24px;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    /* No backdrop blur: the world behind never stops moving, so a blur would
+       have to be recomputed every frame. The panel is near-solid instead. */
     box-shadow: var(--shadow);
   }
 
@@ -231,8 +231,6 @@ html[data-light] .text-accent:not(.casino *) { color: var(--color-amber); }
 .legible {
   background: var(--panel);
   border: 1px solid var(--color-line);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border-radius: 16px;
   padding: 0.6rem 1.1rem;
 }
@@ -500,7 +498,7 @@ html[data-light] .text-accent:not(.casino *) { color: var(--color-amber); }
   --color-cyan: #4fe3ff;
   --color-pink: #ff8fe0;
   --color-flame: #ff6b7d;
-  --panel: rgba(22, 14, 48, 0.72);
+  --panel: rgba(22, 14, 48, 0.88);
   --well: rgba(255, 255, 255, 0.05);
   --ghost: rgba(255, 255, 255, 0.06);
   --ghost-line: rgba(255, 255, 255, 0.18);
