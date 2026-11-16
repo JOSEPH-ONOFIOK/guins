@@ -12,7 +12,7 @@ export default function Home() {
       <Scene />
       <Nav />
       <main>
-        <Intro />
+        <Intro cta={{ label: "Get a Guin", href: "#apply" }} />
         <Hero />
         <Ribbon />
         <Lineup />

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ArrowIcon } from "./Nav";
 
 // The opening screen: just the glacier art and a name written in the sky.
 // It stays pinned while you scroll, and the Scene flies you through the ice frame
@@ -9,12 +10,15 @@ export function Intro({
   tagline = "The most unbothered penguins on-chain",
   art,
   next = "#colony",
+  cta,
 }: {
   eyebrow?: string;
   title?: string;
   tagline?: string;
   art?: ReactNode;
   next?: string;
+  // Optional main button under the tagline, e.g. Get a Guin → the whitelist
+  cta?: { label: string; href: string };
 }) {
   return (
     <section id="top" aria-label={title} className="relative h-[120svh] overflow-x-clip">
@@ -28,6 +32,11 @@ export function Intro({
         <p className="pop-in mt-6 max-w-[90vw] rounded-full bg-black/45 px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] text-white uppercase [animation-delay:.4s] sm:text-xs">
           {tagline}
         </p>
+        {cta && (
+          <a href={cta.href} className="btn btn-accent pop-in mt-6 !px-7 !py-4 text-sm [animation-delay:.5s] sm:text-base">
+            {cta.label} <ArrowIcon />
+          </a>
+        )}
         <a
           href={next}
           className="pop-in mt-[clamp(1.5rem,5vh,3rem)] flex flex-col items-center gap-1 text-[10px] font-bold tracking-[0.24em] text-white uppercase [animation-delay:.6s]"
