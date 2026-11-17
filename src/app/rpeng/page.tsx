@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Airdrop } from "@/components/Airdrop";
+import { QuotePost } from "@/components/QuotePost";
 import { AIRDROP_OPEN } from "@/lib/airdrop";
 import { Footer } from "@/components/Footer";
 import { GoldMedallion } from "@/components/GoldMedallion";
@@ -58,10 +59,20 @@ export default function RpengPage() {
                     <a href="#play" className="btn btn-ghost btn-sm">Games</a>
                   </>
                 ) : (
-                  <a href="#play" className="btn btn-accent btn-sm">See the games <ArrowIcon /></a>
+                  <>
+                    <a href="#quote" className="btn btn-accent btn-sm">Quote the post <ArrowIcon /></a>
+                    <a href="#play" className="btn btn-ghost btn-sm">Games</a>
+                  </>
                 )}
                 <Link href="/rpeng/wiki" className="btn btn-ghost btn-sm">Wiki</Link>
               </div>
+            </Reveal>
+          </section>
+
+          {/* The one $RPENG task for now: quote the post */}
+          <section id="quote" className="mx-auto mt-10 max-w-5xl scroll-mt-24 px-4 sm:px-8">
+            <Reveal>
+              <QuotePost />
             </Reveal>
           </section>
 
