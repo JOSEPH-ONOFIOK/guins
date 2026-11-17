@@ -256,7 +256,7 @@ export function Crew() {
             <Action
               disabled={busy === "post"}
               onClick={() => {
-open(`https://x.com/intent/post?text=${encodeURIComponent(`Just joined the Guins colony 🐧 Pass #${crewNo(entry!.handle)}\n\nStay unbothered. $rpeng @${X_HANDLE}\n${window.location.origin}`)}`);
+open(`https://x.com/intent/post?text=${encodeURIComponent(`Just joined the Guins colony 🐧\n\nPass #${crewNo(entry!.handle)}\n\nStay unbothered.\n\n$RPENG @${X_HANDLE}\n${window.location.host}`)}`);
                 task({ task: "post" }, "post");
               }}
             >
