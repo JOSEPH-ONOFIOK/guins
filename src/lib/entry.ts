@@ -39,7 +39,7 @@ export const X_URL = `https://x.com/${X_HANDLE}`;
 
 // The post people like, repost and reply to. This is the fallback: an admin can
 // set or change it at /admin (src/lib/links.ts). Empty = the buttons open the profile.
-export const PINNED_POST = "";
+export const PINNED_POST = "https://x.com/hoodguins/status/2122698823612960934";
 
 export type SignupRow = ReturnType<typeof signupRow>;
 
