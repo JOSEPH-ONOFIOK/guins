@@ -87,7 +87,7 @@ export function Nav() {
   }, []);
 
   return (
-    <header className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${solid || open ? "border-b border-line bg-void/95" : "border-b border-transparent bg-gradient-to-b from-void/75 to-transparent"}`}>
+    <header className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${solid || open ? "border-b border-line bg-void" : "border-b border-transparent bg-gradient-to-b from-void/75 to-transparent"}`}>
       <nav className="mx-auto grid h-20 max-w-6xl grid-cols-[1fr_auto] items-center gap-4 px-4 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
         <Link href="/" className="flex items-center gap-3 justify-self-start font-display text-xl font-bold" aria-label="Guins home">
           <PenguinMark />

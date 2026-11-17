@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "../Icon";
 import { ChainLock } from "./ChainLock";
 import { useEffect, useRef, useState } from "react";
-import { MIN_BET, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { CoinFlip, FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, FourSeconds } from "./FourSeconds";
 import { OU_PAYS, OverUnder } from "./OverUnder";
@@ -98,7 +98,7 @@ export function Casino() {
         <div>
           <div className="label">your chips</div>
           <div key={balance} className="pop-in font-mono text-3xl font-bold text-gold tabular-nums sm:text-4xl">{fmtTok(balance)}</div>
-          <div className="font-mono text-xs text-dim">≈ {fmtUsd(balance)} · {balance.toLocaleString("en-US")} $RPENG</div>
+          <div className="font-mono text-xs text-dim">{RATE_KNOWN ? `≈ ${fmtUsd(balance)} · ` : ""}{balance.toLocaleString("en-US")} play chips</div>
         </div>
         {broke ? (
           <button className="btn btn-accent btn-sm" onClick={() => setBalance(START_CHIPS)}>
@@ -153,7 +153,7 @@ export function Casino() {
             <div key={flash.id} className="pop-in">
               <p className={`font-display text-2xl font-bold ${flash.net > 0 ? "text-mint" : flash.net === 0 ? "text-fg" : "text-flame"}`}>
                 {flash.net > 0 ? `+${fmtTok(flash.net)}` : flash.net === 0 ? "Push" : `−${fmtTok(-flash.net)}`}
-                <span className="ml-2 font-mono text-sm opacity-70">{flash.net !== 0 && `(${flash.net > 0 ? "+" : "−"}${fmtUsd(Math.abs(flash.net))})`}</span>
+                <span className="ml-2 font-mono text-sm opacity-70">{RATE_KNOWN && flash.net !== 0 && `(${flash.net > 0 ? "+" : "−"}${fmtUsd(Math.abs(flash.net))})`}</span>
               </p>
               <p className="text-sm text-dim">{flash.note}</p>
             </div>
@@ -166,7 +166,7 @@ export function Casino() {
         <div>
           <div className="label">bet</div>
           <div className="font-mono text-xl font-bold">
-            {fmtTok(bet)} <span className="text-sm font-normal text-dim">≈ {fmtUsd(bet)}</span>
+            {fmtTok(bet)} {RATE_KNOWN && <span className="text-sm font-normal text-dim">≈ {fmtUsd(bet)}</span>}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">

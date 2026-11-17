@@ -5,6 +5,7 @@ import { HANDLE, WALLET, X_HANDLE, toPublic } from "@/lib/entry";
 import { hasDatabase, redis, store } from "@/lib/store";
 import { verifyAirdropQrt } from "@/lib/xpost";
 import { getLinks, postId } from "@/lib/links";
+import { AIRDROP_OPEN } from "@/lib/airdrop";
 
 // $RPENG airdrop application. Steps must go in order:
 //   follow                             clicked follow on our X account
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
 }
 
 async function run(req: Request) {
+  if (!AIRDROP_OPEN) return bad("The airdrop application is closed for now.", 403);
   const a = await authed(req);
   if ("error" in a) return a.error;
   const { entry, body } = a;

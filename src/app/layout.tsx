@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: { default: TITLE, template: "%s · Guins" },
   description: DESCRIPTION,
   applicationName: "Guins",
-  keywords: ["Guins", "Hoodguins", "$RPENG", "penguin", "NFT", "PFP", "colony", "whitelist", "allowlist", "airdrop"],
+  keywords: ["Guins", "Hoodguins", "$RPENG", "penguin", "NFT", "PFP", "colony", "whitelist", "allowlist", "free mint"],
   alternates: { canonical: "/" },
   openGraph: { type: "website", url: "/", siteName: "Guins", locale: "en_US", title: TITLE, description: DESCRIPTION, images: [SHARE] },
   twitter: { card: "summary_large_image", site: "@hoodguins", creator: "@hoodguins", title: TITLE, description: DESCRIPTION, images: [SHARE] },

@@ -2,6 +2,10 @@
 
 import { SITE_URL } from "./site";
 
+// The airdrop application on /rpeng. false = hidden everywhere and the API takes no
+// new applications; anything already saved is kept. Set to true to bring it back.
+export const AIRDROP_OPEN = false;
+
 // The airdrop announcement people comment on, retweet and quote. This is the
 // fallback: an admin can set or change it at /admin (src/lib/links.ts).
 export const AIRDROP_POST = "";

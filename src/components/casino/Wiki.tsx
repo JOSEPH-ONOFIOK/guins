@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { MIN_BET, RATE, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { MIN_BET, RATE, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, TARGET } from "./FourSeconds";
 import { OU_PAYS } from "./OverUnder";
@@ -78,13 +78,21 @@ const ARTICLES: Article[] = [
         <p>The colony casino is where Guins kill time while they wait for $RPENG. You play with free <b>play chips</b>, not real tokens, so nothing here costs or pays real money.</p>
         <H>Your first round</H>
         <ol className="grid list-decimal gap-1.5 pl-5">
-          <li>You start with <b>{fmtTok(START_CHIPS)}</b> chips (≈ {fmtUsd(START_CHIPS)}).</li>
+          <li>You start with <b>{fmtTok(START_CHIPS)}</b> play chips{RATE_KNOWN && ` (≈ ${fmtUsd(START_CHIPS)})`}.</li>
           <li>Pick a game from the four tabs above the table.</li>
           <li>Tap a poker chip under the table to set your bet. ½, 2× and Max adjust it.</li>
           <li>Play. Your bet leaves your balance when the round starts, and any win lands back on it when the round ends.</li>
         </ol>
         <H>Reading the numbers</H>
-        <p>Big amounts are shortened: <b>K</b> = thousand, <b>M</b> = million, <b>B</b> = billion. The dollar figure next to an amount uses the reference rate <b>{RATE.tokens.toLocaleString("en-US")} $RPENG = {fmtUsd(RATE.tokens)}</b>, so 1M ≈ {fmtUsd(1_000_000)} and 50M ≈ {fmtUsd(50_000_000)}.</p>
+        <p>Big amounts are shortened: <b>K</b> = thousand, <b>M</b> = million, <b>B</b> = billion.
+          {RATE_KNOWN ? (
+            <>
+              {" "}The dollar figure next to an amount uses the reference rate <b>{RATE.tokens.toLocaleString("en-US")} $RPENG = {fmtUsd(RATE.tokens)}</b>, so 1M ≈ {fmtUsd(1_000_000)} and 50M ≈ {fmtUsd(50_000_000)}.
+            </>
+          ) : (
+            " There are no dollar values: $RPENG hasn't launched, so it has no price yet."
+          )}
+        </p>
         <H>Which game should I play?</H>
         <Table
           head={["Game", "Win chance", "Top payout", "Return", "Skill"]}
@@ -209,7 +217,7 @@ const ARTICLES: Article[] = [
           ["House edge", "The other side of return: the small share the house keeps. 97% return is a 3% edge."],
           ["Win chance", "How often a bet wins. It's different from return, because rare wins pay more."],
           ["Top up", `Resets your balance to ${fmtTok(START_CHIPS)} once it falls under ${fmtTok(MIN_BET)}.`],
-          ["Reference rate", `${RATE.tokens.toLocaleString("en-US")} $RPENG = ${fmtUsd(RATE.tokens)}. Used to show dollar values, nothing else.`],
+          ...(RATE_KNOWN ? [["Reference rate", `${RATE.tokens.toLocaleString("en-US")} $RPENG = ${fmtUsd(RATE.tokens)}. Used to show dollar values, nothing else.`]] : []),
         ].map(([k, v]) => (
           <div key={k} className="well px-4 py-3">
             <dt className="font-display text-sm font-bold text-gold">{k}</dt>
@@ -226,12 +234,13 @@ const ARTICLES: Article[] = [
     body: (
       <div className="grid gap-2">
         {[
-          ["Are these real $RPENG?", "No. Chips are play money for fun. They can't be bought, withdrawn, swapped or cashed out, and they have nothing to do with the airdrop."],
+          ["Are these real $RPENG?", "No. Chips are play money for fun. They can't be bought, withdrawn, swapped or cashed out, and they have nothing to do with real $RPENG."],
           ["Where is my balance saved?", "In this browser only. Clearing site data, a private window or another device starts you fresh."],
           ["Is it rigged?", "Every result comes from your browser's secure random number generator, the same kind used for passwords. The odds in this wiki are exact."],
           ["Can I lose more than my balance?", "No. You can't bet more than you have, and you can top up whenever you drop under the minimum bet."],
-          ["Does playing help my airdrop?", "No. The airdrop is its own application on the $RPENG page, under Claim airdrop."],
-          ["Why do dollar values look so small?", `$RPENG has a huge supply, so each token is worth a tiny fraction of a cent at the reference rate: 1M ≈ ${fmtUsd(1_000_000)}.`],
+          RATE_KNOWN
+            ? ["Why do dollar values look so small?", `$RPENG has a huge supply, so each token is worth a tiny fraction of a cent at the reference rate: 1M ≈ ${fmtUsd(1_000_000)}.`]
+            : ["What's $RPENG worth?", "Nothing yet: it hasn't launched, so it has no price. That's why the casino shows chips and no dollar values."],
         ].map(([q, a]) => (
           <details key={q} className="well group px-4 py-3">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">

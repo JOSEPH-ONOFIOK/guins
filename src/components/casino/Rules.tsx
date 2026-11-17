@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon, type IconName } from "../Icon";
-import { MIN_BET, RATE, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { MIN_BET, RATE, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS } from "./FourSeconds";
 import { OU_PAYS } from "./OverUnder";
@@ -41,11 +41,11 @@ export function Rules() {
     <div>
       <ol className="well grid gap-3 p-5 text-sm sm:text-base">
         {[
-          `Everyone starts with ${fmtTok(START_CHIPS)} play chips (≈ ${fmtUsd(START_CHIPS)}).`,
+          `Everyone starts with ${fmtTok(START_CHIPS)} play chips${RATE_KNOWN ? ` (≈ ${fmtUsd(START_CHIPS)})` : ""}.`,
           `Pick a game, choose your bet with the chips under the table (min ${fmtTok(MIN_BET)}), then play.`,
           "Your bet comes off your balance when the round starts. A win pays your bet × the payout, so a 2× win on 10M gives back 20M (10M profit).",
           `Run out? Top back up to ${fmtTok(START_CHIPS)} any time your balance drops under ${fmtTok(MIN_BET)}.`,
-          `Dollar values use the reference rate ${RATE.tokens.toLocaleString("en-US")} $RPENG = ${fmtUsd(RATE.tokens)}. It's for display only.`,
+          RATE_KNOWN ? `Dollar values use the reference rate ${RATE.tokens.toLocaleString("en-US")} $RPENG = ${fmtUsd(RATE.tokens)}. It's for display only.` : "Play chips have no value: $RPENG hasn't launched yet, so nothing here is priced.",
           "Every outcome is decided by your browser's secure random number generator. 4 Seconds is the only one where skill counts.",
         ].map((t, i) => (
           <li key={i} className="flex gap-3">

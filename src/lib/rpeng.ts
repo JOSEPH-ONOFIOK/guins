@@ -1,7 +1,10 @@
-// $RPENG numbers shared by the casino and the airdrop.
+// $RPENG numbers shared by the casino, rules and wiki.
 
-// Reference rate for the dollar value shown next to amounts. Placeholder until the
-// token trades: 100,000,000 $RPENG ≈ $2.00.
+// $RPENG hasn't launched, so it has no price: with RATE_KNOWN false the site shows
+// no dollar values and the rate reads "Soon". After launch, set the real RATE and
+// flip RATE_KNOWN to true to show "≈ $" next to amounts again.
+export const RATE_KNOWN = false;
+// Placeholder: 100,000,000 $RPENG ≈ $2.00
 export const RATE = { tokens: 100_000_000, usd: 2 };
 export const USD_PER_TOKEN = RATE.usd / RATE.tokens;
 

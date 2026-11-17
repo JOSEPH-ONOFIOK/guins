@@ -90,7 +90,7 @@ export function AdminPanel() {
         </p>
       )}
       {field("pinned", "Pinned post", "Whitelist steps 03 and 04: like, repost and reply.", pinned, setPinned, links.pinnedPost, links.pinnedId)}
-      {field("airdrop", "Airdrop post", "$RPENG airdrop: comment, retweet and quote. Quotes are checked against this post.", airdrop, setAirdrop, links.airdropPost, links.airdropId)}
+      {field("airdrop", "Airdrop post", "$RPENG airdrop (hidden on the site for now): comment, retweet and quote. Quotes are checked against this post.", airdrop, setAirdrop, links.airdropPost, links.airdropId)}
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn btn-accent" disabled={busy || !canSave}>{busy ? "Saving…" : "Save links"}</button>
         <a href={`/api/admin/export?key=${encodeURIComponent(key)}`} className="btn btn-ghost">Download sign-ups (CSV)</a>
