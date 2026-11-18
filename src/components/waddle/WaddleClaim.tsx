@@ -59,6 +59,9 @@ function Meter({ stats }: { stats: WlStats | null }) {
           style={{ width: stats ? `${Math.max((claimed / cap) * 100, claimed ? 1.5 : 0)}%` : "0%" }}
         />
       </div>
+      <p className="mt-2 text-xs text-dim">
+        Sorry about the hiccup earlier: claiming is fixed. If it errored for you, tap Confirm my spot again.
+      </p>
       {/* Every community: pfp with its name beside it, the OG frens first */}
       {/* One swipeable row on phones, so the claim card stays close; wraps from sm up */}
       <ul className="-mx-5 mt-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
