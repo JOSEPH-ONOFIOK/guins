@@ -5,7 +5,6 @@ import { QuotePost } from "@/components/QuotePost";
 import { AIRDROP_OPEN } from "@/lib/airdrop";
 import { Footer } from "@/components/Footer";
 import { GoldMedallion } from "@/components/GoldMedallion";
-import { Intro } from "@/components/Intro";
 import { ArrowIcon, Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { Scene } from "@/components/Scene";
@@ -31,16 +30,24 @@ const FACTS = [
   ["Rate", RATE_KNOWN ? `${fmtTok(RATE.tokens)} ≈ ${fmtUsd(RATE.tokens)}` : "Soon"],
 ];
 
-// Same world as the home page: art first, fly through the ice, then the airdrop (when open) and the casino.
+// Same world as the home page, without the big intro: gold Guins up top, then the
+// quote task, the airdrop (when open) and the casino.
 export default function RpengPage() {
   return (
     <>
-      <Scene dark moon={[0.14, 0.06]} />
+      <Scene dark calm moon={[0.14, 0.06]} />
       <Nav />
       <main>
-        <Intro eyebrow="The colony's gold" title="$RPENG" tagline={AIRDROP_OPEN ? "Airdrop · Casino · Wiki" : "Casino · Wiki · Coming soon"} next="#casino" art={<GoldMedallion className="mb-[3vh] w-[clamp(7rem,min(20vw,22vh),15rem)]" />} />
+        <h1 className="sr-only">$RPENG, the colony&apos;s gold</h1>
 
         <div className="casino">
+          {/* The gold Guins: a big one flanked by two smaller ones, each bobbing on its own beat */}
+          <div aria-hidden className="mx-auto flex max-w-5xl items-end justify-center gap-[clamp(1rem,5vw,3.5rem)] px-4 pt-28 pb-10 sm:px-8 sm:pt-32">
+            <GoldMedallion delay={1.6} tilt={-4} className="mb-4 w-[clamp(4.5rem,15vw,8.5rem)]" />
+            <GoldMedallion priority className="w-[clamp(7rem,24vw,12rem)]" />
+            <GoldMedallion delay={3.1} tilt={5} className="mb-4 w-[clamp(4.5rem,15vw,8.5rem)]" />
+          </div>
+
           {/* One compact bar instead of a second big heading: the intro already said it */}
           <section id="casino" className="mx-auto max-w-5xl scroll-mt-24 px-4 sm:px-8">
             <Reveal className="flex flex-wrap items-center justify-between gap-4 border-y border-line py-4">
@@ -86,9 +93,12 @@ export default function RpengPage() {
           )}
 
           <section id="play" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 pb-16 sm:px-8">
-            <Reveal className="mb-6">
-              <p className="label label-accent">The colony casino · coming soon</p>
-              <h2 className="mt-2 font-display text-[clamp(2rem,5vw,3.2rem)] leading-none font-bold uppercase">Flip. Stop. Roll. Spin.</h2>
+            <Reveal className="mb-6 flex items-center justify-between gap-6">
+              <div>
+                <p className="label label-accent">The colony casino · coming soon</p>
+                <h2 className="mt-2 font-display text-[clamp(2rem,5vw,3.2rem)] leading-none font-bold uppercase">Flip. Stop. Roll. Spin.</h2>
+              </div>
+              <GoldMedallion delay={2.4} tilt={-3} className="hidden w-24 shrink-0 sm:block" />
             </Reveal>
             <Reveal>
               <Casino />
