@@ -136,6 +136,19 @@ export async function wlConfirm(handle: string, wallet: string, candidates: stri
   return { ok: true, spot, community };
 }
 
+// A claim made before the sheet kept the Waddle List (it only lived in their browser):
+// put it on the tab, past the limits, since the spot was already promised to them.
+export async function wlRecordEarlier(handle: string, wallet: string, community: string, claimedAt: number) {
+  if (!useSheet) return null;
+  try {
+    const r = await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates: [community], force: true, claimedAt: new Date(claimedAt).toISOString() });
+    return r.ok ? r : null;
+  } catch (e) {
+    if (oldScript(e)) return null;
+    throw e;
+  }
+}
+
 // Spots claimed per community, for the communities given
 export async function wlCommunityCounts(names: string[]) {
   if (useSheet) {

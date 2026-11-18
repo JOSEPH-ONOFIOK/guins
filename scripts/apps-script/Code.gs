@@ -20,7 +20,9 @@
  *   POST {action:"claim", handle, wallet, candidates, limits, cap}
  *        -> { ok:true, spot, community } | { ok:false, reason:"full"|"wallet"|"community" }
  *        Takes a Waddle List spot on the "Waddle List" tab: one at a time, so the
- *        total and each community's limit are never passed.
+ *        total and each community's limit are never passed. force:true records a
+ *        claim made before this tab existed, past the limits (the wallet is still
+ *        checked).
  *
  * There is no secret: anyone with the web app URL can add rows, so keep the URL
  * private. It belongs only in the site's server settings. (Links can only ever be
@@ -30,7 +32,7 @@
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 4;
+var SCRIPT_VERSION = 5;
 
 var TAB = 'Whitelist';
 var SETTINGS = 'Settings';
@@ -267,7 +269,7 @@ function claim(b) {
   var handle = String(b.handle || ''), wallet = String(b.wallet || '');
   if (!/^\w{1,15}$/.test(handle) || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) return { error: 'bad claim' };
   var h = handle.toLowerCase(), w = wallet.toLowerCase();
-  var candidates = (b.candidates || []).map(String), limits = b.limits || {}, cap = Number(b.cap) || 0;
+  var candidates = (b.candidates || []).map(String), limits = b.limits || {}, cap = Number(b.cap) || 0, force = b.force === true;
   var rows = waddleRows(), by = {};
   for (var i = 0; i < rows.length; i++) {
     // Already claimed: the same answer again
@@ -275,15 +277,45 @@ function claim(b) {
     if (rows[i].wallet === w) return { ok: false, reason: 'wallet' };
     by[rows[i].community] = (by[rows[i].community] || 0) + 1;
   }
-  if (rows.length >= cap) return { ok: false, reason: 'full' };
-  var community = '';
-  for (var j = 0; j < candidates.length; j++) {
+  if (rows.length >= cap && !force) return { ok: false, reason: 'full' };
+  var community = force ? candidates[0] || '' : '';
+  for (var j = 0; !community && j < candidates.length; j++) {
     if ((by[candidates[j]] || 0) < (Number(limits[candidates[j]]) || 0)) { community = candidates[j]; break; }
   }
   if (!community) return { ok: false, reason: 'community' };
   var spot = rows.length + 1;
-  waddleTab().appendRow([spot, handle, wallet, clean(community), new Date().toISOString()]);
+  var at = b.claimedAt ? new Date(b.claimedAt) : new Date();
+  waddleTab().appendRow([spot, handle, wallet, clean(community), (isNaN(at) ? new Date() : at).toISOString()]);
   return { ok: true, spot: spot, community: community };
+}
+
+/**
+ * Run once from the Apps Script editor: copies Waddle claims saved on the Whitelist
+ * tab (by an older version of this script) onto the Waddle List tab, oldest first.
+ * Claims already on the tab, or whose wallet is, are skipped. Safe to run again.
+ */
+function importEarlierClaims() {
+  var sheet = tab(), last = sheet.getLastRow();
+  if (last < 2) return Logger.log('No rows on the Whitelist tab.');
+  var values = sheet.getRange(2, 1, last - 1, HEADERS.length).getValues(), found = [];
+  for (var i = 0; i < values.length; i++) {
+    var v = function (name) { return String(values[i][col(name) - 1]); };
+    if (v('Waddle Claimed At') && v('Waddle Wallet') && v('Waddle Community')) {
+      found.push({ handle: v('X Handle'), wallet: v('Waddle Wallet'), community: v('Waddle Community'), at: v('Waddle Claimed At') });
+    }
+  }
+  found.sort(function (a, b) { return a.at < b.at ? -1 : 1; });
+  var before = waddleRows().length, skipped = [];
+  for (var j = 0; j < found.length; j++) {
+    var f = found[j];
+    var r = claim({ handle: f.handle, wallet: f.wallet, candidates: [f.community], force: true, claimedAt: f.at });
+    if (!r.ok) skipped.push(f.handle + ' (' + (r.reason || r.error) + ')');
+  }
+  SpreadsheetApp.flush();
+  var now = waddleRows().length;
+  Logger.log('Earlier claims found on the Whitelist tab: ' + found.length);
+  Logger.log('Added: ' + (now - before) + '. Now on the Waddle List tab: ' + now + ' claims');
+  if (skipped.length) Logger.log('Skipped: ' + skipped.join(', '));
 }
 
 // --- reads ----------------------------------------------------------------
