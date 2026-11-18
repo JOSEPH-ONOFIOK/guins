@@ -59,7 +59,7 @@ function Meter({ stats }: { stats: WlStats | null }) {
           style={{ width: stats ? `${Math.max((claimed / cap) * 100, claimed ? 1.5 : 0)}%` : "0%" }}
         />
       </div>
-      <p className="mt-2 text-xs text-dim">
+      <p className="mt-2 text-xs text-accent">
         Sorry about the hiccup earlier: claiming is fixed. If it errored for you, tap Confirm my spot again.
       </p>
       {/* Every community: pfp with its name beside it, the OG frens first */}
