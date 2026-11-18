@@ -116,8 +116,15 @@ async function run(req: Request) {
     if (held.length) {
       // Their checked community first, then anything else they hold
       const candidates = [...held.filter((h) => h === wl.community), ...held.filter((h) => h !== wl.community)];
-      const r = await wlConfirm(entry.handle, wl.wallet, candidates);
-      if (r.ok) {
+      // The sheet can be busy when lots of people claim at once: keep their progress and let them retry
+      const r = await wlConfirm(entry.handle, wl.wallet, candidates).catch((e) => {
+        console.error("waddle confirm failed", entry.handle, e);
+        return null;
+      });
+      if (!r) {
+        error = "Lots of people are claiming right now. Your steps are saved: tap Confirm my spot again in a few seconds.";
+        status = 503;
+      } else if (r.ok) {
         wl.community = r.community;
         wl.claimedAt = Date.now();
         if (r.spot) wl.spot = r.spot;

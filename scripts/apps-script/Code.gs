@@ -32,7 +32,7 @@
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 5;
+var SCRIPT_VERSION = 6;
 
 var TAB = 'Whitelist';
 var SETTINGS = 'Settings';
@@ -110,7 +110,9 @@ function doPost(e) {
   }
   if (['bulk', 'links', 'claim'].indexOf(body.action) < 0) return json({ error: 'unknown action' });
 
-  var lock = LockService.getScriptLock();
+  // Two queues: claims (Waddle List tab) never wait behind row saves (Whitelist and
+  // Settings tabs). They write different tabs, so they can safely run side by side.
+  var lock = body.action === 'claim' ? LockService.getScriptLock() : LockService.getDocumentLock() || LockService.getScriptLock();
   try {
     lock.waitLock(20000);
   } catch (err) {
@@ -337,9 +339,13 @@ function stats() {
 function tab() {
   var ss = SpreadsheetApp.getActiveSpreadsheet(), sheet = ss.getSheetByName(TAB);
   if (!sheet) sheet = ss.insertSheet(TAB);
-  // Also upgrades a tab made by an older version of this script
-  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#ede8ff');
-  sheet.setFrozenRows(1);
+  // Writes the headers only when they differ (a new tab, or one made by an older
+  // version of this script), so a save doesn't reformat the sheet every time
+  var current = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0].join('\u0001');
+  if (current !== HEADERS.join('\u0001')) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#ede8ff');
+    sheet.setFrozenRows(1);
+  }
   return sheet;
 }
 
