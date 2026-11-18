@@ -53,6 +53,12 @@ export const WADDLE = COMMUNITIES.filter((c) => c.group === "community");
 // Every community's spots added up
 export const WL_CAP = COMMUNITIES.reduce((n, c) => n + c.limit, 0);
 
+// Claims pause once this many spots are taken (WL_CAP or more = no pause). Raise it to reopen.
+export const PAUSE_AT = 1100;
+// The most spots that can be claimed right now
+export const OPEN_CAP = Math.min(WL_CAP, PAUSE_AT);
+export const PAUSED_MSG = `Claims are paused at ${OPEN_CAP.toLocaleString("en-US")} spots for now. Follow @${X_HANDLE} for when they reopen.`;
+
 export const limitOf = (name: string) => COMMUNITIES.find((c) => c.name === name)?.limit ?? 0;
 export const communityOf = (name?: string) => COMMUNITIES.find((c) => c.name === name);
 export function initials(name: string) {
@@ -61,7 +67,8 @@ export function initials(name: string) {
 }
 
 // Public numbers for the meter
-export type WlStats = { claimed: number; cap: number; by: Record<string, number> };
+// pausedAt: claims stop at this count for now (see PAUSE_AT)
+export type WlStats = { claimed: number; cap: number; pausedAt?: number; by: Record<string, number> };
 
 // Filled in for their comment on the pinned post
 // How the community is tagged: "@pudgypenguins", or "Argonauts by @lphaCentauriKid" when the handle is the artist's

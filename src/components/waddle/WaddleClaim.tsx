@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { WALLET, X_HANDLE, X_URL, type PublicEntry } from "@/lib/entry";
-import { OG, WADDLE, WADDLE_POST, WADDLE_POST_ID, WL_CAP, claimText, communityOf, wlTasksDone, type WlStats } from "@/lib/waddle";
+import { OG, OPEN_CAP, PAUSED_MSG, WADDLE, WADDLE_POST, WADDLE_POST_ID, WL_CAP, claimText, communityOf, wlTasksDone, type WlStats } from "@/lib/waddle";
 import { AUTH_ERRORS } from "../Crew";
 import { Icon } from "../Icon";
 import { ArrowIcon, XIcon } from "../Nav";
@@ -39,6 +39,7 @@ function Meter({ stats }: { stats: WlStats | null }) {
   const cap = stats?.cap ?? WL_CAP;
   const claimed = Math.min(stats?.claimed ?? 0, cap);
   const full = !!stats && claimed >= cap;
+  const paused = !!stats && !full && claimed >= (stats.pausedAt ?? cap);
   return (
     <div className="glass p-5 sm:p-7">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -49,8 +50,8 @@ function Meter({ stats }: { stats: WlStats | null }) {
             <span className="text-2xl text-dim sm:text-3xl"> / {fmt(cap)}</span>
           </p>
         </div>
-        <span className={`rounded-full px-3 py-1.5 text-xs font-bold tracking-[0.14em] uppercase ${full ? "bg-flame text-white" : "bg-accent text-accent-ink"}`}>
-          {!stats ? "…" : full ? "All taken" : `${fmt(cap - claimed)} left`}
+        <span className={`rounded-full px-3 py-1.5 text-xs font-bold tracking-[0.14em] uppercase ${full || paused ? "bg-flame text-white" : "bg-accent text-accent-ink"}`}>
+          {!stats ? "…" : full ? "All taken" : paused ? "Paused" : `${fmt(cap - claimed)} left`}
         </span>
       </div>
       <div className="mt-5 h-3 overflow-hidden rounded-full bg-fg/10">
@@ -146,6 +147,8 @@ export function WaddleClaim() {
   }, [claimed]);
 
   const full = !!stats && stats.claimed >= stats.cap;
+  // Claims paused for now (PAUSE_AT in lib/waddle.ts)
+  const paused = !!stats && !full && stats.claimed >= (stats.pausedAt ?? OPEN_CAP);
 
   const step = async (body: Record<string, unknown>, key: string) => {
     setBusy(key);
@@ -292,6 +295,12 @@ export function WaddleClaim() {
                     <p className="label label-accent">Waddle List</p>
                     <h2 className="mt-3 font-display text-4xl leading-none font-bold">All spots are taken.</h2>
                     <p className="mt-3 text-dim">All {fmt(WL_CAP)} spots are claimed. Follow @{X_HANDLE} for what&apos;s next.</p>
+                  </div>
+                ) : paused ? (
+                  <div>
+                    <p className="label label-accent">Waddle List</p>
+                    <h2 className="mt-3 font-display text-4xl leading-none font-bold">Claims are paused.</h2>
+                    <p className="mt-3 text-dim">{PAUSED_MSG}</p>
                   </div>
                 ) : (
                   <ol className="grid gap-3">

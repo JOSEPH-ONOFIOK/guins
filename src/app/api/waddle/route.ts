@@ -4,7 +4,7 @@ import { cached } from "@/lib/cache";
 import { WALLET, X_HANDLE, toPublic } from "@/lib/entry";
 import { checkHoldings, wlClaimedCount, wlCommunityCounts, wlConfirm, wlStats, wlWalletOwner } from "@/lib/holdings";
 import { store } from "@/lib/store";
-import { WADDLE_POST_ID, WL_CAP, limitOf, wlTasksDone } from "@/lib/waddle";
+import { OPEN_CAP, PAUSED_MSG, WADDLE_POST_ID, WL_CAP, limitOf, wlTasksDone } from "@/lib/waddle";
 import { verifyClaimComment } from "@/lib/xpost";
 
 // GET → { claimed, cap, by } for the meter
@@ -21,7 +21,8 @@ export async function GET() {
   }
 }
 
-const FULL = `All ${WL_CAP.toLocaleString("en-US")} Waddle List spots are taken.`;
+// Paused below the full count: say so, rather than "all taken"
+const FULL = OPEN_CAP < WL_CAP ? PAUSED_MSG : `All ${WL_CAP.toLocaleString("en-US")} Waddle List spots are taken.`;
 const fullMsg = (names: string[]) => `${names.join(" and ")} ${names.length > 1 ? "are" : "is"} fully claimed.`;
 const downMsg = (down: string[]) => `We couldn't reach ${down.join(" and ")} just now. Try again in a minute.`;
 
@@ -66,7 +67,7 @@ async function run(req: Request) {
       if (!WALLET.test(wallet)) return bad("That isn't a valid EVM address. It starts with 0x followed by 40 characters.");
       const owner = await wlWalletOwner(wallet);
       if (owner && owner !== entry.handle.toLowerCase()) return bad("That wallet already claimed a Waddle List spot on another account.");
-      if ((await wlClaimedCount()) >= WL_CAP) return bad(FULL);
+      if ((await wlClaimedCount()) >= OPEN_CAP) return bad(FULL);
       if (!(await store.limit(`wlcheck:${entry.handle.toLowerCase()}`, 10, 600))) return bad("Too many checks. Try again in a few minutes.", 429);
 
       const { held, down } = await checkHoldings(wallet);

@@ -6,7 +6,7 @@
 
 import { cached } from "./cache";
 import { SHEET_URL, sheetCall } from "./sheet";
-import { CHAIN_NAMES, COMMUNITIES, WL_CAP, limitOf, type Chain, type WlStats } from "./waddle";
+import { CHAIN_NAMES, COMMUNITIES, OPEN_CAP, WL_CAP, limitOf, type Chain, type WlStats } from "./waddle";
 import { hasDatabase, redis } from "./store";
 
 const useSheet = !hasDatabase && !!SHEET_URL;
@@ -97,7 +97,7 @@ export async function wlConfirm(handle: string, wallet: string, candidates: stri
   if (useSheet) {
     const limits = Object.fromEntries(candidates.map((c) => [c, limitOf(c)]));
     try {
-      return await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates, limits, cap: WL_CAP });
+      return await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates, limits, cap: OPEN_CAP });
     } catch (e) {
       if (!oldScript(e)) throw e;
     }
@@ -127,7 +127,7 @@ export async function wlConfirm(handle: string, wallet: string, candidates: stri
   }
   await redis("SADD", ALL, h);
   const spot = await redis<number>("SCARD", ALL);
-  if (spot > WL_CAP) {
+  if (spot > OPEN_CAP) {
     await redis("SREM", ALL, h);
     await redis("SREM", byKey(community), h);
     await release();
@@ -163,9 +163,9 @@ export async function wlCommunityCounts(names: string[]) {
 export async function wlStats(): Promise<WlStats> {
   if (useSheet) {
     const { claimed, by } = await sheetStats();
-    return { claimed, cap: WL_CAP, by: Object.fromEntries(COMMUNITIES.map((c) => [c.name, by[c.name] ?? 0])) };
+    return { claimed, cap: WL_CAP, pausedAt: OPEN_CAP, by: Object.fromEntries(COMMUNITIES.map((c) => [c.name, by[c.name] ?? 0])) };
   }
-  if (!hasDatabase) return { claimed: 0, cap: WL_CAP, by: {} };
+  if (!hasDatabase) return { claimed: 0, cap: WL_CAP, pausedAt: OPEN_CAP, by: {} };
   const [claimed, counts] = await Promise.all([wlClaimedCount(), wlCommunityCounts(COMMUNITIES.map((c) => c.name))]);
-  return { claimed, cap: WL_CAP, by: Object.fromEntries(COMMUNITIES.map((c, i) => [c.name, counts[i]])) };
+  return { claimed, cap: WL_CAP, pausedAt: OPEN_CAP, by: Object.fromEntries(COMMUNITIES.map((c, i) => [c.name, counts[i]])) };
 }
