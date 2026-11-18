@@ -25,6 +25,10 @@ const FULL = `All ${WL_CAP.toLocaleString("en-US")} Waddle List spots are taken.
 const fullMsg = (names: string[]) => `${names.join(" and ")} ${names.length > 1 ? "are" : "is"} fully claimed.`;
 const downMsg = (down: string[]) => `We couldn't reach ${down.join(" and ")} just now. Try again in a minute.`;
 
+// The sheet only shows a Waddle claim once it's confirmed, plus the comment link:
+// the other steps skip the copy, which keeps the sheet free for claims
+const sheetShows = (wl: { claimedAt?: number }, step: unknown) => !!wl.claimedAt || step === "comment";
+
 // The communities they hold that still have room, in list order
 async function withRoom(names: string[]) {
   const counts = await wlCommunityCounts(names);
@@ -142,12 +146,12 @@ async function run(req: Request) {
     if (error) {
       // Keep the step they just finished, so they can retry with Confirm my spot
       entry.updatedAt = Date.now();
-      await store.put(entry);
+      await store.put(entry, { mirror: sheetShows(wl, body.step) });
       return Response.json({ error, entry: toPublic(entry) }, { status });
     }
   }
 
   entry.updatedAt = Date.now();
-  await store.put(entry);
+  await store.put(entry, { mirror: sheetShows(wl, body.step) });
   return Response.json({ entry: toPublic(entry) });
 }

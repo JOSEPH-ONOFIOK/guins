@@ -19,10 +19,15 @@
  *   GET  ?waddleWallet=0x…                             -> { owner }         X handle that claimed with it, or ""
  *   POST {action:"claim", handle, wallet, candidates, limits, cap}
  *        -> { ok:true, spot, community } | { ok:false, reason:"full"|"wallet"|"community" }
- *        Takes a Waddle List spot on the "Waddle List" tab: one at a time, so the
- *        total and each community's limit are never passed. force:true records a
- *        claim made before this tab existed, past the limits (the wallet is still
- *        checked).
+ *        Takes a Waddle List spot: one at a time, so the total and each community's
+ *        limit are never passed. force:true records a claim made before claims were
+ *        kept, past the limits (the wallet is still checked).
+ *
+ * Waddle claims are counted in the script's own key-value store (Script Properties),
+ * so a claim holds the lock for milliseconds instead of waiting on the spreadsheet.
+ * The "Waddle List" tab is the readable record, written after the spot is taken.
+ * After editing that tab by hand (deleting a row to free a spot), run
+ * rebuildClaimsFromTab once from the editor.
  *
  * There is no secret: anyone with the web app URL can add rows, so keep the URL
  * private. It belongs only in the site's server settings. (Links can only ever be
@@ -32,7 +37,7 @@
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 6;
+var SCRIPT_VERSION = 7;
 
 var TAB = 'Whitelist';
 var SETTINGS = 'Settings';
@@ -110,9 +115,10 @@ function doPost(e) {
   }
   if (['bulk', 'links', 'claim'].indexOf(body.action) < 0) return json({ error: 'unknown action' });
 
-  // Two queues: claims (Waddle List tab) never wait behind row saves (Whitelist and
-  // Settings tabs). They write different tabs, so they can safely run side by side.
-  var lock = body.action === 'claim' ? LockService.getScriptLock() : LockService.getDocumentLock() || LockService.getScriptLock();
+  if (body.action === 'claim') return json(claim(body));
+
+  // Row saves queue here. Claims use their own lock (see claim) and never wait behind them.
+  var lock = LockService.getDocumentLock() || LockService.getScriptLock();
   try {
     lock.waitLock(20000);
   } catch (err) {
@@ -120,7 +126,6 @@ function doPost(e) {
   }
   try {
     if (body.action === 'links') return json({ links: writeLinks(body) });
-    if (body.action === 'claim') return json(claim(body));
     return json({ saved: saveAll(body.rows || []) });
   } catch (err) {
     return json({ error: String(err) });
@@ -244,51 +249,154 @@ function waddleTab() {
   return sheet;
 }
 
-/** Every claim as { spot, handle, wallet, community }, handles and wallets lower-cased. */
+/** Every row on the Waddle List tab as { spot, handle, wallet, community, at }, handles and wallets lower-cased. */
 function waddleRows() {
   var sheet = waddleTab(), last = sheet.getLastRow();
   if (last < 2) return [];
-  return sheet.getRange(2, 1, last - 1, 4).getValues().map(function (r) {
-    return { spot: Number(r[0]) || 0, handle: String(r[1]).toLowerCase(), wallet: String(r[2]).toLowerCase(), community: String(r[3]) };
+  return sheet.getRange(2, 1, last - 1, 5).getValues().map(function (r) {
+    return { spot: Number(r[0]) || 0, handle: String(r[1]).toLowerCase(), wallet: String(r[2]).toLowerCase(), community: String(r[3]), at: r[4] };
   }).filter(function (r) { return r.handle; });
 }
 
+// Claims in Script Properties:
+//   wl:h:<handle>  -> [spot, wallet, community]     wl:w:<wallet> -> handle
+//   wl:n           -> spots taken                   wl:c:<community> -> spots taken there
+//   wl:top         -> highest spot number given (so a freed spot's number is never reused)
+//   wl:ready       -> "1" once loaded from the tab
+function props() {
+  return PropertiesService.getScriptProperties();
+}
+
+/** First use (or after rebuildClaimsFromTab): loads the claims already on the tab. Call under the claim lock. */
+function loadClaims() {
+  var p = props();
+  if (p.getProperty('wl:ready')) return;
+  var rows = waddleRows(), out = { 'wl:n': '0' }, n = 0, top = 0, by = {};
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (out['wl:h:' + r.handle]) continue;
+    n++;
+    by[r.community] = (by[r.community] || 0) + 1;
+    top = Math.max(top, r.spot || n);
+    out['wl:h:' + r.handle] = JSON.stringify([r.spot || n, r.wallet, r.community]);
+    if (r.wallet) out['wl:w:' + r.wallet] = r.handle;
+  }
+  out['wl:n'] = String(n);
+  out['wl:top'] = String(top);
+  for (var c in by) out['wl:c:' + c] = String(by[c]);
+  out['wl:ready'] = '1';
+  p.setProperties(out);
+}
+
+/** The counts, cached for 5 s: the progress bar asks often, and Script Properties have a daily read quota. */
 function waddleStats() {
-  var rows = waddleRows(), by = {};
-  for (var i = 0; i < rows.length; i++) by[rows[i].community] = (by[rows[i].community] || 0) + 1;
-  return { claimed: rows.length, by: by };
+  var cache = CacheService.getScriptCache(), hit = cache.get('wl:stats');
+  if (hit) return JSON.parse(hit);
+  var out = countClaims();
+  cache.put('wl:stats', JSON.stringify(out), 5);
+  return out;
+}
+
+function countClaims() {
+  var all = props().getProperties();
+  if (!all['wl:ready']) {
+    // Not loaded yet: count straight from the tab
+    var rows = waddleRows(), counts = {};
+    for (var i = 0; i < rows.length; i++) counts[rows[i].community] = (counts[rows[i].community] || 0) + 1;
+    return { claimed: rows.length, by: counts };
+  }
+  var by = {};
+  for (var k in all) if (k.indexOf('wl:c:') === 0) by[k.slice(5)] = Number(all[k]) || 0;
+  return { claimed: Number(all['wl:n']) || 0, by: by };
 }
 
 function waddleOwner(wallet) {
   wallet = String(wallet || '').toLowerCase();
-  var rows = waddleRows();
-  for (var i = 0; i < rows.length; i++) if (rows[i].wallet === wallet) return rows[i].handle;
-  return '';
+  if (!props().getProperty('wl:ready')) {
+    var rows = waddleRows();
+    for (var i = 0; i < rows.length; i++) if (rows[i].wallet === wallet) return rows[i].handle;
+    return '';
+  }
+  return props().getProperty('wl:w:' + wallet) || '';
 }
 
-/** Runs under the script lock, so two claims never take the same last spot. */
+/**
+ * Takes a spot. The lock is held only while the counts are read and written, so
+ * claims never queue behind the spreadsheet. The tab row is added after.
+ */
 function claim(b) {
   var handle = String(b.handle || ''), wallet = String(b.wallet || '');
   if (!/^\w{1,15}$/.test(handle) || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) return { error: 'bad claim' };
-  var h = handle.toLowerCase(), w = wallet.toLowerCase();
-  var candidates = (b.candidates || []).map(String), limits = b.limits || {}, cap = Number(b.cap) || 0, force = b.force === true;
-  var rows = waddleRows(), by = {};
-  for (var i = 0; i < rows.length; i++) {
-    // Already claimed: the same answer again
-    if (rows[i].handle === h) return { ok: true, spot: rows[i].spot, community: rows[i].community };
-    if (rows[i].wallet === w) return { ok: false, reason: 'wallet' };
-    by[rows[i].community] = (by[rows[i].community] || 0) + 1;
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(25000);
+  } catch (err) {
+    return { error: 'busy' };
   }
-  if (rows.length >= cap && !force) return { ok: false, reason: 'full' };
+  var r;
+  try {
+    loadClaims();
+    r = reserve(handle, wallet, b);
+  } catch (err) {
+    return { error: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
+  if (r.row) {
+    var at = b.claimedAt ? new Date(b.claimedAt) : new Date();
+    try {
+      waddleTab().appendRow([r.spot, handle, wallet, clean(r.community), (isNaN(at) ? new Date() : at).toISOString()]);
+    } catch (err) {
+      // The spot is already theirs; the tab just misses the row. rebuildClaimsFromTab would drop it, so log it loudly.
+      console.error('Waddle List row not written for ' + handle + ' (spot ' + r.spot + '): ' + err);
+    }
+  }
+  return r.ok ? { ok: true, spot: r.spot, community: r.community } : { ok: false, reason: r.reason };
+}
+
+function reserve(handle, wallet, b) {
+  // One read of everything: cheaper on the daily quota than a read per key
+  var p = props(), all = p.getProperties(), h = handle.toLowerCase(), w = wallet.toLowerCase();
+  var mine = all['wl:h:' + h];
+  // Already claimed: the same answer again
+  if (mine) {
+    var m = JSON.parse(mine);
+    return { ok: true, spot: m[0], community: m[2] };
+  }
+  if (all['wl:w:' + w]) return { ok: false, reason: 'wallet' };
+  var candidates = (b.candidates || []).map(String), limits = b.limits || {}, cap = Number(b.cap) || 0, force = b.force === true;
+  var n = Number(all['wl:n']) || 0;
+  if (n >= cap && !force) return { ok: false, reason: 'full' };
   var community = force ? candidates[0] || '' : '';
   for (var j = 0; !community && j < candidates.length; j++) {
-    if ((by[candidates[j]] || 0) < (Number(limits[candidates[j]]) || 0)) { community = candidates[j]; break; }
+    if ((Number(all['wl:c:' + candidates[j]]) || 0) < (Number(limits[candidates[j]]) || 0)) community = candidates[j];
   }
   if (!community) return { ok: false, reason: 'community' };
-  var spot = rows.length + 1;
-  var at = b.claimedAt ? new Date(b.claimedAt) : new Date();
-  waddleTab().appendRow([spot, handle, wallet, clean(community), (isNaN(at) ? new Date() : at).toISOString()]);
-  return { ok: true, spot: spot, community: community };
+  var spot = Math.max(n, Number(all['wl:top']) || 0) + 1, out = {};
+  out['wl:h:' + h] = JSON.stringify([spot, w, community]);
+  out['wl:w:' + w] = h;
+  out['wl:n'] = String(n + 1);
+  out['wl:top'] = String(spot);
+  out['wl:c:' + community] = String((Number(all['wl:c:' + community]) || 0) + 1);
+  p.setProperties(out);
+  return { ok: true, spot: spot, community: community, row: true };
+}
+
+/**
+ * Run from the editor after changing the Waddle List tab by hand (for example deleting
+ * a row to free a spot): reloads the claim counts from the tab.
+ */
+function rebuildClaimsFromTab() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var p = props(), all = p.getProperties();
+    for (var k in all) if (k.indexOf('wl:') === 0) p.deleteProperty(k);
+    loadClaims();
+    Logger.log('Claims reloaded from the tab: ' + JSON.stringify(countClaims()));
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
@@ -307,16 +415,16 @@ function importEarlierClaims() {
     }
   }
   found.sort(function (a, b) { return a.at < b.at ? -1 : 1; });
-  var before = waddleRows().length, skipped = [];
+  var before = countClaims().claimed, skipped = [];
   for (var j = 0; j < found.length; j++) {
     var f = found[j];
     var r = claim({ handle: f.handle, wallet: f.wallet, candidates: [f.community], force: true, claimedAt: f.at });
     if (!r.ok) skipped.push(f.handle + ' (' + (r.reason || r.error) + ')');
   }
   SpreadsheetApp.flush();
-  var now = waddleRows().length;
+  var now = countClaims().claimed;
   Logger.log('Earlier claims found on the Whitelist tab: ' + found.length);
-  Logger.log('Added: ' + (now - before) + '. Now on the Waddle List tab: ' + now + ' claims');
+  Logger.log('Added: ' + (now - before) + '. Claims now: ' + now);
   if (skipped.length) Logger.log('Skipped: ' + skipped.join(', '));
 }
 

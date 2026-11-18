@@ -10,7 +10,8 @@ import { queueMirror } from "./mirror";
 
 interface Store {
   get(handle: string): Promise<Entry | null>;
-  put(entry: Entry): Promise<void>;
+  // mirror: false skips the copy to the Google Sheet (for saves that change nothing it shows)
+  put(entry: Entry, opts?: { mirror?: boolean }): Promise<void>;
   all(): Promise<Entry[]>;
   walletOwner(wallet: string): Promise<string | null>;
   claimWallet(wallet: string, handle: string, previous?: string): Promise<void>;
@@ -96,8 +97,8 @@ const base: Store = hasDatabase ? upstash : cookie;
 // Every save is also copied to the Google Sheet, when one is set up
 export const store: Store = {
   ...base,
-  async put(entry) {
+  async put(entry, opts) {
     await base.put(entry);
-    queueMirror(entry);
+    if (opts?.mirror !== false) queueMirror(entry);
   },
 };
