@@ -2,7 +2,7 @@
  * GUINS whitelist applications — Google Apps Script web app.
  *
  * A readable list of everyone applying for the whitelist (the colony tasks on the
- * home page) and the $RPENG airdrop (/rpeng). The site saves each change to its own
+ * home page), the $RPENG airdrop (/rpeng) and the Waddle List community claim (/waddle). The site saves each change to its own
  * storage and sends the whole row here. Nothing is read back from this sheet.
  *
  * It also keeps the two post links an admin sets at /admin (the pinned post and
@@ -24,7 +24,7 @@
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 2;
+var SCRIPT_VERSION = 3;
 
 var TAB = 'Whitelist';
 var SETTINGS = 'Settings';
@@ -46,6 +46,11 @@ var HEADERS = [
   '$RPENG Airdrop QRT',
   '$RPENG Airdrop Invited By',
   '$RPENG Airdrop At',
+  'Waddle Wallet',
+  'Waddle Community',
+  'Waddle Spot',
+  'Waddle Comment',
+  'Waddle Claimed At',
 ];
 
 /** Which field of a row from the site (signupRow in src/lib/entry.ts) fills each column. */
@@ -64,6 +69,11 @@ var FIELDS = {
   '$RPENG Airdrop QRT': 'airdrop_qrt',
   '$RPENG Airdrop Invited By': 'airdrop_invited_by',
   '$RPENG Airdrop At': 'airdrop_at',
+  'Waddle Wallet': 'waddle_wallet',
+  'Waddle Community': 'waddle_community',
+  'Waddle Spot': 'waddle_spot',
+  'Waddle Comment': 'waddle_comment',
+  'Waddle Claimed At': 'waddle_at',
 };
 
 /** Columns that may change to a new value later (everything else is kept once filled). */

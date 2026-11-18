@@ -1,6 +1,7 @@
 // One colony sign-up and its tasks. Shared by the API routes and the UI.
 
 import type { Airdrop } from "./airdrop";
+import type { WaddleList } from "./waddle";
 
 export type TaskId = "follow" | "engage" | "comment" | "wallet" | "post";
 
@@ -18,6 +19,8 @@ export type Entry = {
   ip?: string;
   // $RPENG airdrop application (/rpeng), separate from the colony tasks
   ad?: Airdrop;
+  // Waddle List community claim (/waddle), separate again
+  wl?: WaddleList;
 };
 
 export const TASK_ORDER: TaskId[] = ["follow", "engage", "comment", "wallet", "post"];
@@ -60,5 +63,10 @@ export function signupRow(e: Entry) {
     airdrop_qrt: e.ad?.qrtLink ?? "",
     airdrop_invited_by: e.ad?.invitedBy ?? "",
     airdrop_at: iso(e.ad?.appliedAt),
+    waddle_wallet: e.wl?.claimedAt ? (e.wl.wallet ?? "") : "",
+    waddle_community: e.wl?.claimedAt ? (e.wl.community ?? "") : "",
+    waddle_spot: e.wl?.spot ? String(e.wl.spot) : "",
+    waddle_comment: e.wl?.commentLink ?? "",
+    waddle_at: iso(e.wl?.claimedAt),
   };
 }

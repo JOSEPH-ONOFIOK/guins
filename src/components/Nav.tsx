@@ -9,6 +9,7 @@ import { HoodguinArt } from "./HoodguinArt";
 
 const LINKS = [
   { href: "/#gang", label: "Gang" },
+  { href: "/waddle", label: "Waddle" },
   { href: "/rpeng", label: "$RPENG" },
   { href: "/rpeng/wiki", label: "Wiki" },
 ];
@@ -75,7 +76,7 @@ function ThemeToggle() {
 export function Nav() {
   const path = usePathname();
   // Which pill link is the page you're on (the gang lives on the home page)
-  const current = (href: string) => (href === "/rpeng" ? path === "/rpeng" : href === "/rpeng/wiki" ? path.startsWith("/rpeng/wiki") : false);
+  const current = (href: string) => (href === "/rpeng" || href === "/waddle" ? path === href : href === "/rpeng/wiki" ? path.startsWith("/rpeng/wiki") : false);
   const [solid, setSolid] = useState(false);
   const [open, setOpen] = useState(false);
 
