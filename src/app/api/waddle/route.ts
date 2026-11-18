@@ -3,9 +3,8 @@ import { authed, bad } from "@/lib/api";
 import { cached } from "@/lib/cache";
 import { WALLET, X_HANDLE, toPublic } from "@/lib/entry";
 import { checkHoldings, wlClaimedCount, wlCommunityCounts, wlConfirm, wlStats, wlWalletOwner } from "@/lib/holdings";
-import { getLinks, postId } from "@/lib/links";
 import { store } from "@/lib/store";
-import { WL_CAP, limitOf, wlTasksDone } from "@/lib/waddle";
+import { WADDLE_POST_ID, WL_CAP, limitOf, wlTasksDone } from "@/lib/waddle";
 import { verifyClaimComment } from "@/lib/xpost";
 
 // GET → { claimed, cap, by } for the meter
@@ -95,8 +94,7 @@ async function run(req: Request) {
       if (!wl.community) return bad("Check your wallet first.");
       if (!wl.followed) return bad(`Follow @${X_HANDLE} first.`);
       if (!wl.liked || !wl.reposted) return bad("Like and repost the post first.");
-      const { pinnedPost } = await getLinks();
-      const r = await verifyClaimComment(String(body.link ?? ""), entry.handle, postId(pinnedPost));
+      const r = await verifyClaimComment(String(body.link ?? ""), entry.handle, WADDLE_POST_ID);
       if (!r.ok) return bad(r.error);
       wl.commentLink = r.link;
       break;

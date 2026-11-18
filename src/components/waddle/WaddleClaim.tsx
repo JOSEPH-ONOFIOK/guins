@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { WALLET, X_HANDLE, X_URL, type PublicEntry } from "@/lib/entry";
-import { OG, WADDLE, WL_CAP, claimText, communityOf, wlTasksDone, type WlStats } from "@/lib/waddle";
+import { OG, WADDLE, WADDLE_POST, WADDLE_POST_ID, WL_CAP, claimText, communityOf, wlTasksDone, type WlStats } from "@/lib/waddle";
 import { AUTH_ERRORS } from "../Crew";
 import { Icon } from "../Icon";
 import { ArrowIcon, XIcon } from "../Nav";
@@ -90,8 +90,8 @@ export function WaddleClaim() {
   const [entry, setEntry] = useState<PublicEntry | null>(null);
   const [notice, setNotice] = useState<{ text: string; bad?: boolean } | null>(null);
   const [devHandle, setDevHandle] = useState("");
-  // The post they like, repost and comment on: the pinned post (an admin can change it at /admin)
-  const [post, setPost] = useState({ url: "", id: "" });
+  // The post they like, repost and comment on: the Waddle List post
+  const post = { url: WADDLE_POST, id: WADDLE_POST_ID };
   // null until they type, so the saved wallet shows by default
   const [draft, setDraft] = useState<string | null>(null);
   const [link, setLink] = useState("");
@@ -112,7 +112,6 @@ export function WaddleClaim() {
       .then((d) => {
         setEntry(d.entry);
         setAuth(d.auth);
-        setPost({ url: d.links?.pinnedPost ?? "", id: d.links?.pinnedId ?? "" });
       })
       .catch(() => {})
       .finally(() => {
