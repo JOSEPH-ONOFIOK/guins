@@ -2,7 +2,7 @@
 
 The Guins site: [www.hoodguin.xyz](https://www.hoodguin.xyz). Whitelist application
 (sign in with X, then the tasks), the gang line-up, and `/rpeng` with the $RPENG
-airdrop, the colony casino (locked for now) and the game wiki.
+airdrop, The Colony Casino (locked for now) and the game wiki.
 
 ```bash
 npm install

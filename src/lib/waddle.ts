@@ -5,8 +5,8 @@ import { X_HANDLE } from "./entry";
 
 // The Waddle List post: claimers like, repost and comment on it, and the comment is
 // checked against it. Separate from the whitelist's pinned post.
-export const WADDLE_POST = "https://x.com/hoodguins/status/2123053742513909923";
-export const WADDLE_POST_ID = "2123053742513909923";
+export const WADDLE_POST = "https://x.com/hoodguins/status/2123092860836958534";
+export const WADDLE_POST_ID = "2123092860836958534";
 
 export type Chain = "ethereum" | "robinhood";
 export const CHAIN_NAMES: Record<Chain, string> = { ethereum: "Ethereum", robinhood: "Robinhood Chain" };
@@ -54,7 +54,7 @@ export const WADDLE = COMMUNITIES.filter((c) => c.group === "community");
 export const WL_CAP = COMMUNITIES.reduce((n, c) => n + c.limit, 0);
 
 // Claims pause once this many spots are taken (WL_CAP or more = no pause). Raise it to reopen.
-export const PAUSE_AT = 1100;
+export const PAUSE_AT = WL_CAP;
 // The most spots that can be claimed right now
 export const OPEN_CAP = Math.min(WL_CAP, PAUSE_AT);
 export const PAUSED_MSG = `Claims are paused at ${OPEN_CAP.toLocaleString("en-US")} spots for now. Follow @${X_HANDLE} for when they reopen.`;

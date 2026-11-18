@@ -5,7 +5,7 @@ import { ArrowIcon, Nav } from "@/components/Nav";
 import { Scene } from "@/components/Scene";
 import { Wiki } from "@/components/casino/Wiki";
 
-const DESC = "How to play every game in the colony casino: rules, odds, payouts, tips, glossary and FAQ.";
+const DESC = "How to play every game in The Colony Casino: rules, odds, payouts, tips, glossary and FAQ.";
 const SHARE = { url: "/og-rpeng.png", width: 1200, height: 630, alt: "$RPENG: the colony's gold" };
 export const metadata: Metadata = {
   title: "Game wiki",
@@ -24,7 +24,7 @@ export default function WikiPage() {
       <div className="casino">
         <main className="mx-auto max-w-5xl px-4 pt-28 pb-20 sm:px-8 sm:pt-32">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link href="/rpeng" className="chip transition hover:border-accent">← Back to the casino</Link>
+            <Link href="/rpeng" className="chip transition hover:border-accent">← Back to The Colony Casino</Link>
             <Link href="/rpeng#play" className="btn btn-accent btn-sm">
               Games coming soon <ArrowIcon />
             </Link>
@@ -34,7 +34,7 @@ export default function WikiPage() {
             <h1 className="mt-3 font-display text-[clamp(3rem,8vw,5.5rem)] leading-[0.88] font-bold uppercase">
               Game wiki<span className="text-accent">.</span>
             </h1>
-            <p className="mt-4 max-w-lg text-lg text-dim">How to play, odds, payouts, tips and the fine print for every table in the casino.</p>
+            <p className="mt-4 max-w-lg text-lg text-dim">How to play, odds, payouts, tips and the fine print for every table in The Colony Casino.</p>
           </header>
           <div className="mt-10">
             <Wiki />

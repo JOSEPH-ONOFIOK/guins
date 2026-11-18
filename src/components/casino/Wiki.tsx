@@ -9,7 +9,7 @@ import { Icon, type IconName } from "../Icon";
 import { Rules } from "./Rules";
 import { PAIR_PAYS, SYMBOLS } from "./Slots";
 
-// The colony casino wiki: one article per game plus a glossary and FAQ.
+// The Colony Casino wiki: one article per game plus a glossary and FAQ.
 // Every number here is worked out from the game code, so it can't go stale.
 
 const pct = (p: number) => `${(p * 100).toFixed(p < 0.01 ? 3 : 2).replace(/\.?0+$/, "")}%`;
@@ -75,7 +75,7 @@ const ARTICLES: Article[] = [
     title: "Getting started",
     body: (
       <>
-        <p>The colony casino is where Guins kill time while they wait for $RPENG. You play with free <b>play chips</b>, not real tokens, so nothing here costs or pays real money.</p>
+        <p>The Colony Casino is where Guins kill time while they wait for $RPENG. You play with free <b>play chips</b>, not real tokens, so nothing here costs or pays real money.</p>
         <H>Your first round</H>
         <ol className="grid list-decimal gap-1.5 pl-5">
           <li>You start with <b>{fmtTok(START_CHIPS)}</b> play chips{RATE_KNOWN && ` (≈ ${fmtUsd(START_CHIPS)})`}.</li>
@@ -130,7 +130,7 @@ const ARTICLES: Article[] = [
     box: [["Type", "Skill"], ["Target", `${TARGET.toFixed(2)}s`], ["Top payout", `${FOUR_TIERS[0].pays}×`], ["Clock hides", "after 1.5s"], ["Auto stop", "8s"]],
     body: (
       <>
-        <p>The only game in the casino you can actually get good at. Start the clock and stop it as close to exactly {TARGET.toFixed(2)} seconds as you can. You see the first 1.5 seconds, then it goes dark and you&apos;re counting on feel.</p>
+        <p>The only game in The Colony Casino you can actually get good at. Start the clock and stop it as close to exactly {TARGET.toFixed(2)} seconds as you can. You see the first 1.5 seconds, then it goes dark and you&apos;re counting on feel.</p>
         <H>Payout tiers</H>
         <Table
           head={["Tier", "Stop between", "You get back"]}
@@ -240,7 +240,7 @@ const ARTICLES: Article[] = [
           ["Can I lose more than my balance?", "No. You can't bet more than you have, and you can top up whenever you drop under the minimum bet."],
           RATE_KNOWN
             ? ["Why do dollar values look so small?", `$RPENG has a huge supply, so each token is worth a tiny fraction of a cent at the reference rate: 1M ≈ ${fmtUsd(1_000_000)}.`]
-            : ["What's $RPENG worth?", "Nothing yet: it hasn't launched, so it has no price. That's why the casino shows chips and no dollar values."],
+            : ["What's $RPENG worth?", "Nothing yet: it hasn't launched, so it has no price. That's why The Colony Casino shows chips and no dollar values."],
         ].map(([q, a]) => (
           <details key={q} className="well group px-4 py-3">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">
