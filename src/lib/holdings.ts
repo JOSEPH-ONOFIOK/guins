@@ -1,8 +1,27 @@
 // Server only: which Waddle List communities a wallet holds, read live from each chain,
 // and the claimed-spot counts.
+//
+// Claims live in Upstash when it's set up, otherwise on the Google Sheet's
+// "Waddle List" tab (scripts/apps-script/Code.gs), which takes one claim at a time.
 
+import { cached } from "./cache";
+import { SHEET_URL, sheetCall } from "./sheet";
 import { CHAIN_NAMES, COMMUNITIES, WL_CAP, limitOf, type Chain, type WlStats } from "./waddle";
 import { hasDatabase, redis } from "./store";
+
+const useSheet = !hasDatabase && !!SHEET_URL;
+
+// A sheet script older than version 4 doesn't know claims: carry on without limits
+const oldScript = (e: unknown) => /unknown (request|action)/.test(String(e));
+
+type SheetStats = { claimed: number; by: Record<string, number> };
+const sheetStats = () =>
+  cached("wlSheet", 5_000, () =>
+    sheetCall<SheetStats>(undefined, "?waddle", 15_000).catch((e): SheetStats => {
+      if (oldScript(e)) return { claimed: 0, by: {} };
+      throw e;
+    }),
+  );
 
 const RPC: Record<Chain, string> = {
   ethereum: process.env.ETHEREUM_RPC_URL || "https://ethereum-rpc.publicnode.com",
@@ -52,10 +71,20 @@ const walletKey = (wallet: string) => `hg:wl:w:${wallet.toLowerCase()}`;
 
 // One Waddle List wallet per X account. A wallet is only reserved once its spot is confirmed.
 export async function wlWalletOwner(wallet: string) {
+  if (useSheet) {
+    try {
+      const { owner } = await sheetCall<{ owner: string }>(undefined, `?waddleWallet=${wallet.toLowerCase()}`, 15_000);
+      return owner || null;
+    } catch (e) {
+      if (oldScript(e)) return null;
+      throw e;
+    }
+  }
   return hasDatabase ? redis<string | null>("GET", walletKey(wallet)) : null;
 }
 
 export async function wlClaimedCount() {
+  if (useSheet) return (await sheetStats()).claimed;
   return hasDatabase ? redis<number>("SCARD", ALL) : 0;
 }
 
@@ -65,6 +94,14 @@ type Confirm = { ok: true; spot: number; community: string } | { ok: false; reas
 // still has room, and reserves the wallet. Never goes past WL_CAP or a community's
 // limit, even when several people confirm at the same moment.
 export async function wlConfirm(handle: string, wallet: string, candidates: string[]): Promise<Confirm> {
+  if (useSheet) {
+    const limits = Object.fromEntries(candidates.map((c) => [c, limitOf(c)]));
+    try {
+      return await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates, limits, cap: WL_CAP });
+    } catch (e) {
+      if (!oldScript(e)) throw e;
+    }
+  }
   if (!hasDatabase) return { ok: true, spot: 0, community: candidates[0] };
   const h = handle.toLowerCase();
   const w = walletKey(wallet);
@@ -101,12 +138,20 @@ export async function wlConfirm(handle: string, wallet: string, candidates: stri
 
 // Spots claimed per community, for the communities given
 export async function wlCommunityCounts(names: string[]) {
+  if (useSheet) {
+    const { by } = await sheetStats();
+    return names.map((n) => by[n] ?? 0);
+  }
   if (!hasDatabase) return names.map(() => 0);
   return Promise.all(names.map((n) => redis<number>("SCARD", byKey(n))));
 }
 
 // Claimed spots in total and per community
 export async function wlStats(): Promise<WlStats> {
+  if (useSheet) {
+    const { claimed, by } = await sheetStats();
+    return { claimed, cap: WL_CAP, by: Object.fromEntries(COMMUNITIES.map((c) => [c.name, by[c.name] ?? 0])) };
+  }
   if (!hasDatabase) return { claimed: 0, cap: WL_CAP, by: {} };
   const [claimed, counts] = await Promise.all([wlClaimedCount(), wlCommunityCounts(COMMUNITIES.map((c) => c.name))]);
   return { claimed, cap: WL_CAP, by: Object.fromEntries(COMMUNITIES.map((c, i) => [c.name, counts[i]])) };

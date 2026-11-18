@@ -71,7 +71,7 @@ the existing one instead:
 
 1. Paste the whole new `Code.gs` over the old one and save.
 2. **Deploy → Manage deployments → pencil icon (edit) → Version: New version → Deploy**.
-3. Check: open the web app URL with `?version` on the end. It should say `{"version":3}`.
+3. Check: open the web app URL with `?version` on the end. It should say `{"version":4}`.
 4. Open `https://www.hoodguin.xyz/api/admin/resync?key=ADMIN_KEY` once. It sends
    every saved row again, so rows saved while the old script was live get the
    new columns (such as Waddle claims made before the update).
@@ -98,6 +98,12 @@ Sorting or filtering the tab is safe: rows are found by handle, never by
 position. Filled-in cells are kept, so someone who clears their browser and
 starts again keeps their row. Values that start like a formula (`=`, `+`, `-`,
 `@`) are stripped, so nobody can plant a formula in your sheet.
+
+**Waddle List** has one row per claimed spot: Spot, X Handle, Wallet, Community,
+Claimed At. When Upstash isn't set up, the site counts claims from this tab (the
+progress bar and each community's limit) and refuses a wallet that is already on
+it. Claims go through one at a time, so the limits are never passed. Deleting a
+row frees that spot.
 
 **Settings** has the post links from `/admin`: `pinnedPost` and `airdropPost`,
 each with when it was last changed. Only X post links can be saved there. The

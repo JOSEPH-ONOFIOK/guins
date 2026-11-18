@@ -15,6 +15,12 @@
  *   GET  ?links                                        -> { links }   { pinnedPost, airdropPost }
  *   GET  ?version                                      -> { version }
  *   GET  ?stats                                        -> { applicants, whitelisted, airdrop }
+ *   GET  ?waddle                                       -> { claimed, by }   Waddle List spots taken, per community
+ *   GET  ?waddleWallet=0x…                             -> { owner }         X handle that claimed with it, or ""
+ *   POST {action:"claim", handle, wallet, candidates, limits, cap}
+ *        -> { ok:true, spot, community } | { ok:false, reason:"full"|"wallet"|"community" }
+ *        Takes a Waddle List spot on the "Waddle List" tab: one at a time, so the
+ *        total and each community's limit are never passed.
  *
  * There is no secret: anyone with the web app URL can add rows, so keep the URL
  * private. It belongs only in the site's server settings. (Links can only ever be
@@ -24,10 +30,12 @@
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 3;
+var SCRIPT_VERSION = 4;
 
 var TAB = 'Whitelist';
 var SETTINGS = 'Settings';
+var WADDLE = 'Waddle List';
+var WADDLE_HEADERS = ['Spot', 'X Handle', 'Wallet', 'Community', 'Claimed At'];
 var LINK_KEYS = ['pinnedPost', 'airdropPost'];
 
 /** Rows are written by header name, in this order. */
@@ -86,6 +94,8 @@ function doGet(e) {
   if (p.version !== undefined) return json({ version: SCRIPT_VERSION });
   if (p.stats !== undefined) return json(stats());
   if (p.links !== undefined) return json({ links: readLinks() });
+  if (p.waddle !== undefined) return json(waddleStats());
+  if (p.waddleWallet !== undefined) return json({ owner: waddleOwner(p.waddleWallet) });
   return json({ error: 'unknown request' });
 }
 
@@ -96,7 +106,7 @@ function doPost(e) {
   } catch (err) {
     return json({ error: 'bad request' });
   }
-  if (body.action !== 'bulk' && body.action !== 'links') return json({ error: 'unknown action' });
+  if (['bulk', 'links', 'claim'].indexOf(body.action) < 0) return json({ error: 'unknown action' });
 
   var lock = LockService.getScriptLock();
   try {
@@ -106,6 +116,7 @@ function doPost(e) {
   }
   try {
     if (body.action === 'links') return json({ links: writeLinks(body) });
+    if (body.action === 'claim') return json(claim(body));
     return json({ saved: saveAll(body.rows || []) });
   } catch (err) {
     return json({ error: String(err) });
@@ -215,6 +226,64 @@ function writeLinks(body) {
     current[k] = v;
   }
   return current;
+}
+
+// --- Waddle List claims ("Waddle List" tab) ------------------------------------
+
+function waddleTab() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), sheet = ss.getSheetByName(WADDLE);
+  if (!sheet) {
+    sheet = ss.insertSheet(WADDLE);
+    sheet.getRange(1, 1, 1, WADDLE_HEADERS.length).setValues([WADDLE_HEADERS]).setFontWeight('bold').setBackground('#ede8ff');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/** Every claim as { spot, handle, wallet, community }, handles and wallets lower-cased. */
+function waddleRows() {
+  var sheet = waddleTab(), last = sheet.getLastRow();
+  if (last < 2) return [];
+  return sheet.getRange(2, 1, last - 1, 4).getValues().map(function (r) {
+    return { spot: Number(r[0]) || 0, handle: String(r[1]).toLowerCase(), wallet: String(r[2]).toLowerCase(), community: String(r[3]) };
+  }).filter(function (r) { return r.handle; });
+}
+
+function waddleStats() {
+  var rows = waddleRows(), by = {};
+  for (var i = 0; i < rows.length; i++) by[rows[i].community] = (by[rows[i].community] || 0) + 1;
+  return { claimed: rows.length, by: by };
+}
+
+function waddleOwner(wallet) {
+  wallet = String(wallet || '').toLowerCase();
+  var rows = waddleRows();
+  for (var i = 0; i < rows.length; i++) if (rows[i].wallet === wallet) return rows[i].handle;
+  return '';
+}
+
+/** Runs under the script lock, so two claims never take the same last spot. */
+function claim(b) {
+  var handle = String(b.handle || ''), wallet = String(b.wallet || '');
+  if (!/^\w{1,15}$/.test(handle) || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) return { error: 'bad claim' };
+  var h = handle.toLowerCase(), w = wallet.toLowerCase();
+  var candidates = (b.candidates || []).map(String), limits = b.limits || {}, cap = Number(b.cap) || 0;
+  var rows = waddleRows(), by = {};
+  for (var i = 0; i < rows.length; i++) {
+    // Already claimed: the same answer again
+    if (rows[i].handle === h) return { ok: true, spot: rows[i].spot, community: rows[i].community };
+    if (rows[i].wallet === w) return { ok: false, reason: 'wallet' };
+    by[rows[i].community] = (by[rows[i].community] || 0) + 1;
+  }
+  if (rows.length >= cap) return { ok: false, reason: 'full' };
+  var community = '';
+  for (var j = 0; j < candidates.length; j++) {
+    if ((by[candidates[j]] || 0) < (Number(limits[candidates[j]]) || 0)) { community = candidates[j]; break; }
+  }
+  if (!community) return { ok: false, reason: 'community' };
+  var spot = rows.length + 1;
+  waddleTab().appendRow([spot, handle, wallet, clean(community), new Date().toISOString()]);
+  return { ok: true, spot: spot, community: community };
 }
 
 // --- reads ----------------------------------------------------------------
