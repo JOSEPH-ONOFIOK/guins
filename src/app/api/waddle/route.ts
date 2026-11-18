@@ -11,9 +11,9 @@ import { verifyClaimComment } from "@/lib/xpost";
 export async function GET() {
   await connection();
   try {
-    // Same numbers for everyone: cached here for 15 s, and by the CDN for 15 s
-    return Response.json(await cached("wlStats", 15_000, wlStats), {
-      headers: { "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=30" },
+    // Same numbers for everyone, and the bar asks every 5 s: cached here and by the CDN for 5 s
+    return Response.json(await cached("wlStats", 5_000, wlStats), {
+      headers: { "Cache-Control": "public, max-age=0, s-maxage=5, stale-while-revalidate=10" },
     });
   } catch (e) {
     console.error("waddle stats failed", e);

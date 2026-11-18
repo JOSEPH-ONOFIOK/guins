@@ -123,15 +123,22 @@ export function WaddleClaim() {
       });
   }, []);
 
-  // The live count, on arrival and again once their own spot is confirmed
+  // The live count: on arrival, every 5 s while the tab is open, and once their own spot is confirmed
   useEffect(() => {
     let live = true;
-    fetch("/api/waddle")
-      .then((r) => r.json())
-      .then((d: WlStats) => live && typeof d.claimed === "number" && setStats(d))
-      .catch(() => {});
+    const load = () =>
+      fetch("/api/waddle")
+        .then((r) => r.json())
+        .then((d: WlStats) => live && typeof d.claimed === "number" && setStats(d))
+        .catch(() => {});
+    load();
+    const timer = setInterval(() => document.visibilityState === "visible" && load(), 5_000);
+    const onShow = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onShow);
     return () => {
       live = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
     };
   }, [claimed]);
 
@@ -177,7 +184,7 @@ export function WaddleClaim() {
   };
 
   const postUrl = post.url || X_URL;
-  const text = mine ? claimText(mine.name) : "";
+  const text = mine ? claimText(mine) : "";
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-12">
