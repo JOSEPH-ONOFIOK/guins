@@ -71,7 +71,10 @@ the existing one instead:
 
 1. Paste the whole new `Code.gs` over the old one and save.
 2. **Deploy → Manage deployments → pencil icon (edit) → Version: New version → Deploy**.
-3. Check: open the web app URL with `?version` on the end. It should say `{"version":2}`.
+3. Check: open the web app URL with `?version` on the end. It should say `{"version":3}`.
+4. Open `https://www.hoodguin.xyz/api/admin/resync?key=ADMIN_KEY` once. It sends
+   every saved row again, so rows saved while the old script was live get the
+   new columns (such as Waddle claims made before the update).
 
 The URL stays the same, so nothing changes in Vercel.
 
@@ -87,6 +90,9 @@ The URL stays the same, so nothing changes in Vercel.
 | $RPENG Airdrop Wallet, $RPENG Airdrop At | Wallet and time of a complete airdrop application |
 | $RPENG Airdrop QRT | Link to their verified quote post |
 | $RPENG Airdrop Invited By | Who invited them to the airdrop |
+| Waddle Wallet, Waddle Community | The wallet that claimed a Waddle List spot, and the partner community it holds |
+| Waddle Spot | Their place in the Waddle List queue |
+| Waddle Comment, Waddle Claimed At | Link to their claim comment on the pinned post, and when the spot was confirmed (UTC) |
 
 Sorting or filtering the tab is safe: rows are found by handle, never by
 position. Filled-in cells are kept, so someone who clears their browser and
