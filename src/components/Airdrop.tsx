@@ -142,7 +142,7 @@ export function Airdrop() {
         </p>
         <h2 className="mt-3 font-display text-4xl font-bold tracking-tight text-gold sm:text-6xl">$RPENG Airdrop</h2>
         <p className="mx-auto mt-3 max-w-lg text-lg text-dim">
-          <span className="rounded-md bg-gold px-1.5 font-semibold text-[#1a1200]">{AIRDROP_SHARE}</span> of $RPENG goes back to the colony. Four quick steps, drop your wallet, and you&apos;re in.
+          <span className="rounded-md bg-gold px-1.5 font-semibold text-[#1a1200]">{AIRDROP_SHARE}</span> of $RPENG goes back to The Colony. Complete four quick steps, drop your wallet, and secure your share.
         </p>
       </div>
 

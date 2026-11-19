@@ -9,7 +9,6 @@ import { ArrowIcon, Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { Scene } from "@/components/Scene";
 import { Casino } from "@/components/casino/Casino";
-import { RATE, RATE_KNOWN, fmtTok, fmtUsd } from "@/lib/rpeng";
 
 const DESC = AIRDROP_OPEN
   ? "The colony's gold. Apply for the $RPENG airdrop and preview The Colony Casino: Coin Flip, 4 Seconds, Over/Under 7 and Guin Slots, coming soon."
@@ -22,13 +21,6 @@ export const metadata: Metadata = {
   openGraph: { type: "website", url: "/rpeng", siteName: "Guins", title: "$RPENG · The colony's gold", description: DESC, images: [SHARE] },
   twitter: { card: "summary_large_image", site: "@hoodguins", title: "$RPENG · The colony's gold", description: DESC, images: [SHARE] },
 };
-
-const FACTS = [
-  ["Ticker", "$RPENG"],
-  ["Chain", "TBA"],
-  ["Contract", "Soon"],
-  ["Rate", RATE_KNOWN ? `${fmtTok(RATE.tokens)} ≈ ${fmtUsd(RATE.tokens)}` : "Soon"],
-];
 
 // Same world as the home page, without the big intro: gold Guins up top, then the
 // quote task, the airdrop (when open) and the casino.
@@ -48,18 +40,10 @@ export default function RpengPage() {
             <GoldMedallion delay={3.1} tilt={5} className="mb-4 w-[clamp(4.5rem,15vw,8.5rem)]" />
           </div>
 
-          {/* One compact bar instead of a second big heading: the intro already said it */}
+          {/* Quick links to each part of the page */}
           <section id="casino" className="mx-auto max-w-5xl scroll-mt-24 px-4 sm:px-8">
-            <Reveal className="flex flex-wrap items-center justify-between gap-4 border-y border-line py-4">
-              <dl className="flex flex-wrap gap-x-6 gap-y-2">
-                {FACTS.map(([k, v]) => (
-                  <div key={k} className="flex items-baseline gap-2">
-                    <dt className="label !text-[10px]">{k}</dt>
-                    <dd className={`font-mono text-sm font-semibold ${k === "Ticker" ? "text-accent" : ""}`}>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className="flex flex-wrap gap-2">
+            <Reveal className="flex justify-center border-y border-line py-4">
+              <div className="flex flex-wrap justify-center gap-2">
                 {AIRDROP_OPEN ? (
                   <>
                     <a href="#airdrop" className="btn btn-accent btn-sm">Claim airdrop <ArrowIcon /></a>

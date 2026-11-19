@@ -11,15 +11,15 @@ export const AIRDROP_OPEN = true;
 export const AIRDROP_POST = "https://x.com/hoodguins/status/2122698823612960934";
 
 // How much of the supply goes back to the community. Placeholder until announced.
-export const AIRDROP_SHARE = "1%";
+export const AIRDROP_SHARE = "3%";
 
 const host = SITE_URL.replace(/^https?:\/\//, "").replace(/^www\./, "");
 export const refLink = (handle: string) => `${host}/rpeng?ref=${handle}`;
 
-// Filled in for their quote post (same wording as the Mochi airdrop)
+// Filled in for their quote post. It must keep their invite link: the quote is checked for it.
 // hasPost: they're quoting the airdrop post, so no need to tag us in the text
 export const qrtText = (handle: string, xHandle: string, hasPost: boolean) =>
-  `$RPENG Airdrop Application is Live.\n\n${AIRDROP_SHARE} of $RPENG will be bought & airdropped back to the community\n\nRegister → ${refLink(handle)}\n\nDrop your wallets = $RPENG.${hasPost ? "" : `\n\n@${xHandle}`}`;
+  `Just secured my share of $RPENG 🐧\n\n${AIRDROP_SHARE} of the supply goes back to The Colony. Four steps and a wallet, that's it.\n\nGet yours → ${refLink(handle)}${hasPost ? "" : `\n\n@${xHandle}`}`;
 
 export type Airdrop = {
   followed?: boolean;
