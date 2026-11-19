@@ -8,7 +8,7 @@ export const AIRDROP_OPEN = true;
 
 // The airdrop announcement people comment on, retweet and quote. This is the
 // fallback: an admin can set or change it at /admin (src/lib/links.ts).
-export const AIRDROP_POST = "https://x.com/hoodguins/status/2122698823612960934";
+export const AIRDROP_POST = "https://x.com/hoodguins/status/2123395903797051699";
 
 // How much of the supply goes back to the community. Placeholder until announced.
 export const AIRDROP_SHARE = "3%";
