@@ -76,16 +76,18 @@ export default function RpengPage() {
             </Reveal>
           </section>
 
-          {/* The one $RPENG task for now: quote the post */}
+          {/* The one $RPENG task while the airdrop is closed: quote the post */}
+          {!AIRDROP_OPEN && (
           <section id="quote" className="mx-auto mt-10 max-w-5xl scroll-mt-24 px-4 sm:px-8">
             <Reveal>
               <QuotePost />
             </Reveal>
           </section>
+          )}
 
           {/* The airdrop first: it's the thing you can do today (hidden while closed) */}
           {AIRDROP_OPEN && (
-          <section id="airdrop" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 sm:px-8">
+          <section id="airdrop" className="mx-auto mt-10 max-w-5xl scroll-mt-24 px-4 sm:px-8">
             <Reveal>
               <Airdrop />
             </Reveal>

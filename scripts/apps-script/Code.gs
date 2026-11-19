@@ -22,6 +22,14 @@
  *        Takes a Waddle List spot: one at a time, so the total and each community's
  *        limit are never passed. force:true records a claim made before claims were
  *        kept, past the limits (the wallet is still checked).
+ *   GET  ?airdrop[&handle=x]                           -> { applied, invites }  applications, and friends x brought
+ *   POST {action:"apply", handle, wallet, qrt, ref}
+ *        -> { ok:true, invitedBy } | { ok:false, reason:"wallet" }
+ *        Records a finished $RPENG airdrop application on the "Airdrop" tab: one wallet
+ *        per X account, and an invite counts for ref once (only if ref applied too).
+ *
+ * Airdrop applications are kept in Document Properties (a separate store from the
+ * Waddle claims, about 5,000 applications fit), with the "Airdrop" tab as the record.
  *
  * Waddle claims are counted in the script's own key-value store (Script Properties),
  * so a claim holds the lock for milliseconds instead of waiting on the spreadsheet.
@@ -37,12 +45,14 @@
  */
 
 /** Bumped whenever this file changes, so `?version` shows which copy is deployed. */
-var SCRIPT_VERSION = 7;
+var SCRIPT_VERSION = 8;
 
 var TAB = 'Whitelist';
 var SETTINGS = 'Settings';
 var WADDLE = 'Waddle List';
 var WADDLE_HEADERS = ['Spot', 'X Handle', 'Wallet', 'Community', 'Claimed At'];
+var AIRDROP = 'Airdrop';
+var AIRDROP_HEADERS = ['X Handle', 'Wallet', 'Invited By', 'Quote Post', 'Applied At'];
 var LINK_KEYS = ['pinnedPost', 'airdropPost'];
 
 /** Rows are written by header name, in this order. */
@@ -103,6 +113,7 @@ function doGet(e) {
   if (p.links !== undefined) return json({ links: readLinks() });
   if (p.waddle !== undefined) return json(waddleStats());
   if (p.waddleWallet !== undefined) return json({ owner: waddleOwner(p.waddleWallet) });
+  if (p.airdrop !== undefined) return json(airdropStats(p.handle));
   return json({ error: 'unknown request' });
 }
 
@@ -113,9 +124,10 @@ function doPost(e) {
   } catch (err) {
     return json({ error: 'bad request' });
   }
-  if (['bulk', 'links', 'claim'].indexOf(body.action) < 0) return json({ error: 'unknown action' });
+  if (['bulk', 'links', 'claim', 'apply'].indexOf(body.action) < 0) return json({ error: 'unknown action' });
 
   if (body.action === 'claim') return json(claim(body));
+  if (body.action === 'apply') return json(apply(body));
 
   // Row saves queue here. Claims use their own lock (see claim) and never wait behind them.
   var lock = LockService.getDocumentLock() || LockService.getScriptLock();
@@ -426,6 +438,76 @@ function importEarlierClaims() {
   Logger.log('Earlier claims found on the Whitelist tab: ' + found.length);
   Logger.log('Added: ' + (now - before) + '. Claims now: ' + now);
   if (skipped.length) Logger.log('Skipped: ' + skipped.join(', '));
+}
+
+// --- $RPENG airdrop applications ("Airdrop" tab) ---------------------------------
+//   ad:h:<handle> -> "1"       ad:w:<wallet> -> handle
+//   ad:n          -> applied   ad:i:<handle> -> friends they brought
+
+function adProps() {
+  return PropertiesService.getDocumentProperties();
+}
+
+function airdropTab() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet(), sheet = ss.getSheetByName(AIRDROP);
+  if (!sheet) {
+    sheet = ss.insertSheet(AIRDROP);
+    sheet.getRange(1, 1, 1, AIRDROP_HEADERS.length).setValues([AIRDROP_HEADERS]).setFontWeight('bold').setBackground('#ede8ff');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+/** Applications in all (cached for 5 s), and how many friends `handle` brought. */
+function airdropStats(handle) {
+  var cache = CacheService.getScriptCache(), hit = cache.get('ad:n');
+  var applied = hit !== null ? Number(hit) : Number(adProps().getProperty('ad:n')) || 0;
+  if (hit === null) cache.put('ad:n', String(applied), 5);
+  var h = String(handle || '').toLowerCase(), invites = 0;
+  if (/^\w{1,15}$/.test(h)) invites = Number(adProps().getProperty('ad:i:' + h)) || 0;
+  return { applied: applied, invites: invites };
+}
+
+/** Takes the wallet for this account under the lock (milliseconds), then adds the tab row. */
+function apply(b) {
+  var handle = String(b.handle || ''), wallet = String(b.wallet || '');
+  if (!/^\w{1,15}$/.test(handle) || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) return { error: 'bad application' };
+  var h = handle.toLowerCase(), w = wallet.toLowerCase(), ref = String(b.ref || '').replace(/^@/, '').toLowerCase();
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(25000);
+  } catch (err) {
+    return { error: 'busy' };
+  }
+  var r;
+  try {
+    var p = adProps(), owner = p.getProperty('ad:w:' + w);
+    if (owner && owner !== h) r = { ok: false, reason: 'wallet' };
+    else if (p.getProperty('ad:h:' + h)) r = { ok: true, invitedBy: '' };
+    else {
+      var out = {};
+      out['ad:h:' + h] = '1';
+      out['ad:w:' + w] = h;
+      out['ad:n'] = String((Number(p.getProperty('ad:n')) || 0) + 1);
+      // An invite counts only from someone who applied themselves
+      var invitedBy = /^\w{1,15}$/.test(ref) && ref !== h && p.getProperty('ad:h:' + ref) ? ref : '';
+      if (invitedBy) out['ad:i:' + invitedBy] = String((Number(p.getProperty('ad:i:' + invitedBy)) || 0) + 1);
+      p.setProperties(out);
+      r = { ok: true, invitedBy: invitedBy, row: true };
+    }
+  } catch (err) {
+    return { error: String(err) };
+  } finally {
+    lock.releaseLock();
+  }
+  if (r.row) {
+    try {
+      airdropTab().appendRow([handle, wallet, r.invitedBy, clean(String(b.qrt || '')), new Date().toISOString()]);
+    } catch (err) {
+      console.error('Airdrop row not written for ' + handle + ': ' + err);
+    }
+  }
+  return r.ok ? { ok: true, invitedBy: r.invitedBy } : { ok: false, reason: r.reason };
 }
 
 // --- reads ----------------------------------------------------------------

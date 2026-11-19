@@ -2,7 +2,8 @@ import { connection } from "next/server";
 import { authed, bad } from "@/lib/api";
 import { getSession } from "@/lib/auth";
 import { HANDLE, WALLET, X_HANDLE, toPublic } from "@/lib/entry";
-import { hasDatabase, redis, store } from "@/lib/store";
+import { adApply, adStats } from "@/lib/airdropStore";
+import { store } from "@/lib/store";
 import { verifyAirdropQrt } from "@/lib/xpost";
 import { getLinks, postId } from "@/lib/links";
 import { AIRDROP_OPEN } from "@/lib/airdrop";
@@ -16,13 +17,13 @@ import { AIRDROP_OPEN } from "@/lib/airdrop";
 
 export async function GET() {
   await connection();
-  if (!hasDatabase) return Response.json({ applied: 0, invites: 0 });
   const s = await getSession();
-  const [applied, invites] = await Promise.all([
-    redis<number>("SCARD", "hg:ad:applied"),
-    s ? redis<string | null>("ZSCORE", "hg:ad:invites", s.h.toLowerCase()) : null,
-  ]);
-  return Response.json({ applied, invites: Number(invites ?? 0) }, { headers: { "Cache-Control": "no-store" } });
+  try {
+    return Response.json(await adStats(s?.h), { headers: { "Cache-Control": "no-store" } });
+  } catch (e) {
+    console.error("airdrop stats failed", e);
+    return Response.json({ applied: 0, invites: 0 }, { status: 503 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -75,20 +76,19 @@ async function run(req: Request) {
       if (no) return no;
       const wallet = String(body.wallet ?? "").trim();
       if (!WALLET.test(wallet)) return bad("That isn't a valid EVM address. It starts with 0x followed by 40 characters.");
-      if (hasDatabase) {
-        const key = `hg:ad:w:${wallet.toLowerCase()}`;
-        const took = (await redis<string | null>("SET", key, me, "NX")) === "OK";
-        if (!took && (await redis<string | null>("GET", key)) !== me) return bad("That wallet is already used for the airdrop by another account.");
-      }
+      // Whoever invited them, if that's another account (checked again where it's stored)
+      const raw = String(body.ref ?? "").replace(/^@/, "").toLowerCase();
+      const ref = HANDLE.test(raw) && raw !== me ? raw : "";
+      const r = await adApply(entry.handle, wallet, ref, ad.qrtLink ?? "", async () => !!ref && !!(await store.get(ref))).catch((e) => {
+        console.error("airdrop apply failed", entry.handle, e);
+        return null;
+      });
+      // Busy sheet: their steps are saved, so they only need to press the button again
+      if (!r) return bad("Lots of people are applying right now. Your steps are saved: try again in a few seconds.", 503);
+      if (!r.ok) return bad("That wallet is already used for the airdrop by another account.");
       ad.wallet = wallet;
       ad.appliedAt = Date.now();
-      // Credit whoever invited them, if that's a real account other than their own
-      const ref = String(body.ref ?? "").replace(/^@/, "").toLowerCase();
-      if (HANDLE.test(ref) && ref !== me && (await store.get(ref))) {
-        ad.invitedBy = ref;
-        if (hasDatabase) await redis("ZINCRBY", "hg:ad:invites", 1, ref);
-      }
-      if (hasDatabase) await redis("SADD", "hg:ad:applied", me);
+      if (r.invitedBy) ad.invitedBy = r.invitedBy;
       break;
     }
 
@@ -97,6 +97,7 @@ async function run(req: Request) {
   }
 
   entry.updatedAt = Date.now();
-  await store.put(entry);
+  // The sheet shows the quote link and the finished application; other steps skip the copy
+  await store.put(entry, { mirror: body.step === "qrt" || !!ad.appliedAt });
   return Response.json({ entry: toPublic(entry) });
 }

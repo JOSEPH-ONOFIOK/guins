@@ -71,7 +71,7 @@ the existing one instead:
 
 1. Paste the whole new `Code.gs` over the old one and save.
 2. **Deploy → Manage deployments → pencil icon (edit) → Version: New version → Deploy**.
-3. Check: open the web app URL with `?version` on the end. It should say `{"version":7}`.
+3. Check: open the web app URL with `?version` on the end. It should say `{"version":8}`.
 4. Open `https://www.hoodguin.xyz/api/admin/resync?key=ADMIN_KEY` once. It sends
    every saved row again, so rows saved while the old script was live get the
    new columns (such as Waddle claims made before the update).
@@ -112,6 +112,12 @@ Claims made before this tab existed are added two ways. Run
 menu, then Run) to copy any saved on the Whitelist tab. Claims that only lived in
 someone's browser are added the next time they open the site. Both count even if
 a community is already full, since those spots were already promised.
+
+**Airdrop** has one row per finished $RPENG airdrop application: X Handle,
+Wallet, Invited By, Quote Post, Applied At. When Upstash isn't set up, the site uses
+the script to keep one wallet per X account and to count applications and invites
+(an invite counts only when the inviter applied too). Those counts live in the
+spreadsheet's Document Properties, which hold about 5,000 applications.
 
 **Settings** has the post links from `/admin`: `pinnedPost` and `airdropPost`,
 each with when it was last changed. Only X post links can be saved there. The
