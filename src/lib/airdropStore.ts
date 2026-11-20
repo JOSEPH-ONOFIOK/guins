@@ -17,7 +17,11 @@ export async function adApply(handle: string, wallet: string, ref: string, qrt: 
   const me = handle.toLowerCase();
   if (useSheet) {
     try {
-      return await sheetCall<Applied>({ action: "apply", handle, wallet, ref, qrt });
+      const r = await sheetCall<Applied>({ action: "apply", handle, wallet, ref, qrt });
+      // Only a real answer counts: a wrong script that replies {ok:true} must never accept an application
+      if (r?.ok === true && typeof r.invitedBy === "string") return r;
+      if (r?.ok === false && r.reason === "wallet") return r;
+      throw new Error(`Unexpected sheet reply: ${JSON.stringify(r).slice(0, 80)}`);
     } catch (e) {
       if (!oldScript(e)) throw e;
       return { ok: true, invitedBy: "" };
@@ -42,7 +46,12 @@ export async function adStats(handle?: string): Promise<{ applied: number; invit
     try {
       const q = handle ? `?airdrop&handle=${encodeURIComponent(handle.toLowerCase())}` : "?airdrop";
       // The total is the same for everyone: share it for a few seconds
-      return handle ? await sheetCall(undefined, q, 15_000) : await cached("adSheet", 5_000, () => sheetCall(undefined, q, 15_000));
+      const load = async () => {
+        const r = await sheetCall<{ applied: number; invites: number }>(undefined, q, 15_000);
+        if (typeof r?.applied !== "number") throw new Error(`Unexpected sheet reply: ${JSON.stringify(r).slice(0, 80)}`);
+        return { applied: r.applied, invites: Number(r.invites) || 0 };
+      };
+      return handle ? await load() : await cached("adSheet", 5_000, load);
     } catch (e) {
       if (oldScript(e)) return { applied: 0, invites: 0 };
       throw e;

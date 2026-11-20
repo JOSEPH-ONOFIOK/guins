@@ -17,11 +17,24 @@ const oldScript = (e: unknown) => /unknown (request|action)/.test(String(e));
 type SheetStats = { claimed: number; by: Record<string, number> };
 const sheetStats = () =>
   cached("wlSheet", 5_000, () =>
-    sheetCall<SheetStats>(undefined, "?waddle", 15_000).catch((e): SheetStats => {
-      if (oldScript(e)) return { claimed: 0, by: {} };
-      throw e;
-    }),
+    sheetCall<SheetStats>(undefined, "?waddle", 15_000).then(
+      (r) => {
+        if (typeof r?.claimed !== "number" || typeof r.by !== "object") throw new Error(`Unexpected sheet reply: ${JSON.stringify(r).slice(0, 80)}`);
+        return r;
+      },
+      (e): SheetStats => {
+        if (oldScript(e)) return { claimed: 0, by: {} };
+        throw e;
+      },
+    ),
   );
+
+// Only a real answer counts: a wrong script that replies {ok:true} must never confirm a spot
+function checkConfirm(r: Confirm): Confirm {
+  if (r?.ok === true && typeof r.spot === "number" && typeof r.community === "string" && r.community) return r;
+  if (r?.ok === false && ["full", "wallet", "community"].includes(r.reason)) return r;
+  throw new Error(`Unexpected sheet reply: ${JSON.stringify(r).slice(0, 80)}`);
+}
 
 const RPC: Record<Chain, string> = {
   ethereum: process.env.ETHEREUM_RPC_URL || "https://ethereum-rpc.publicnode.com",
@@ -97,7 +110,7 @@ export async function wlConfirm(handle: string, wallet: string, candidates: stri
   if (useSheet) {
     const limits = Object.fromEntries(candidates.map((c) => [c, limitOf(c)]));
     try {
-      return await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates, limits, cap: OPEN_CAP });
+      return checkConfirm(await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates, limits, cap: OPEN_CAP }));
     } catch (e) {
       if (!oldScript(e)) throw e;
     }
@@ -141,7 +154,7 @@ export async function wlConfirm(handle: string, wallet: string, candidates: stri
 export async function wlRecordEarlier(handle: string, wallet: string, community: string, claimedAt: number) {
   if (!useSheet) return null;
   try {
-    const r = await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates: [community], force: true, claimedAt: new Date(claimedAt).toISOString() });
+    const r = checkConfirm(await sheetCall<Confirm>({ action: "claim", handle, wallet, candidates: [community], force: true, claimedAt: new Date(claimedAt).toISOString() }));
     return r.ok ? r : null;
   } catch (e) {
     if (oldScript(e)) return null;

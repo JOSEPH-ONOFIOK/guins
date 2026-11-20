@@ -29,9 +29,10 @@ export function cleanPostLink(raw: unknown): string | null {
 export const canSaveLinks = hasDatabase || !!SHEET_URL;
 
 // A saved empty value means "use the one in the code"
-const merge = (saved: Partial<Links>): Links => ({
-  pinnedPost: saved.pinnedPost || DEFAULTS.pinnedPost,
-  airdropPost: saved.airdropPost || DEFAULTS.airdropPost,
+// A sheet that answers without links (an old or wrong script) counts as "nothing saved"
+const merge = (saved?: Partial<Links> | null): Links => ({
+  pinnedPost: saved?.pinnedPost || DEFAULTS.pinnedPost,
+  airdropPost: saved?.airdropPost || DEFAULTS.airdropPost,
 });
 
 // The sheet answers in about a second, and every visitor asks: keep its answer
@@ -44,8 +45,8 @@ export async function getLinks(): Promise<Links> {
     if (hasDatabase) return merge(JSON.parse((await redis<string | null>("GET", KEY)) ?? "{}"));
     if (SHEET_URL) {
       if (!sheetCache || Date.now() - sheetCache.at > SHEET_TTL) {
-        const { links } = await sheetCall<{ links: Partial<Links> }>(undefined, "?links");
-        sheetCache = { at: Date.now(), links };
+        const { links } = await sheetCall<{ links?: Partial<Links> }>(undefined, "?links");
+        sheetCache = { at: Date.now(), links: links && typeof links === "object" ? links : {} };
       }
       return merge(sheetCache.links);
     }
