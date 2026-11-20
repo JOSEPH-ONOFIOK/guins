@@ -5,8 +5,8 @@ import { X_HANDLE } from "./entry";
 
 // The Waddle List post: claimers like, repost and comment on it, and the comment is
 // checked against it. Separate from the whitelist's pinned post.
-export const WADDLE_POST = "https://x.com/hoodguins/status/2123092860836958534";
-export const WADDLE_POST_ID = "2123092860836958534";
+export const WADDLE_POST = "https://x.com/hoodguins/status/2123816618396614944";
+export const WADDLE_POST_ID = "2123816618396614944";
 
 export type Chain = "ethereum" | "robinhood";
 export const CHAIN_NAMES: Record<Chain, string> = { ethereum: "Ethereum", robinhood: "Robinhood Chain" };
