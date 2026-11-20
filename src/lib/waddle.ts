@@ -23,8 +23,8 @@ export type Community = { name: string; x: string; group: Group; chain: Chain; c
 
 export const COMMUNITIES: Community[] = [
   // Penguin Frens / OG NFT communities
-  { name: "Pudgy Penguins", x: "pudgypenguins", group: "og", chain: "ethereum", contract: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8", limit: 30, logo: "/communities/pudgy-penguins.jpg", tint: "#9fd8ff" },
-  { name: "Lil Pudgys", x: "LilPudgys", group: "og", chain: "ethereum", contract: "0x524cab2ec69124574082676e6f654a18df49a048", limit: 60, logo: "/communities/lil-pudgys.jpg", tint: "#bfe9ff" },
+  { name: "Pudgy Penguins", x: "pudgypenguins", group: "og", chain: "ethereum", contract: "0xbd3531da5cf5857e7cfaa92426877b022e612cf8", limit: 9, logo: "/communities/pudgy-penguins.jpg", tint: "#9fd8ff" },
+  { name: "Lil Pudgys", x: "LilPudgys", group: "og", chain: "ethereum", contract: "0x524cab2ec69124574082676e6f654a18df49a048", limit: 54, logo: "/communities/lil-pudgys.jpg", tint: "#bfe9ff" },
   { name: "Sappy Seals", x: "sappyseals", group: "og", chain: "ethereum", contract: "0x364c828ee171616a39897688a831c2499ad972ec", limit: 10, logo: "/communities/sappy-seals.jpg", tint: "#b69bff" },
 
   // Waddle communities
