@@ -17,7 +17,7 @@ export type Group = "og" | "community";
 
 // contract "" = not checked yet: holders can't claim through it until the address is added
 // limit: how many Waddle List spots that community gets
-// x: its X account, tagged in the claim comment (Argonauts is tagged through its artist)
+// x: its X account, tagged in the claim comment (Argonauts is tagged through its artist; "" = its name instead)
 // logo: art in public/communities. None yet = its initials on its tint.
 export type Community = { name: string; x: string; group: Group; chain: Chain; contract: string; limit: number; logo?: string; tint: string };
 
@@ -44,6 +44,10 @@ export const COMMUNITIES: Community[] = [
   { name: "Yield Field Deeds", x: "YieldFields_RH", group: "community", chain: "robinhood", contract: "0x231142e88f523b0a4f46d2d79faab2ce1828e43a", limit: 10, logo: "/communities/yield-field-deeds.jpg", tint: "#3ee6a8" },
   { name: "The Goat Ranch Club", x: "goatranchclub", group: "community", chain: "robinhood", contract: "0x95a85681e28988b4ef503369470b4da7681c4bc8", limit: 210, logo: "/communities/goat-ranch-club.jpg", tint: "#ffb169" },
   { name: "Freedz", x: "freedznft", group: "community", chain: "ethereum", contract: "0x993873f58f0ce4728bbd68dd5fabcb75ef48e7c4", limit: 70, logo: "/communities/freedz.jpg", tint: "#4fe3ff" },
+  { name: "Bored Ape Yacht Club", x: "BoredApeYC", group: "community", chain: "ethereum", contract: "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d", limit: 50, logo: "/communities/bayc.jpg", tint: "#b8a14a" },
+  { name: "Funkari", x: "FunkariNft", group: "community", chain: "ethereum", contract: "0x1fafd33d882e1c275c61066019a23c1999b5006e", limit: 50, logo: "/communities/funkari.jpg", tint: "#f5f3ff" },
+  { name: "CannaCats", x: "CannaCatMeme", group: "community", chain: "robinhood", contract: "0x289c8ce652f38029867842048068b39bd0464a3f", limit: 50, logo: "/communities/cannacats.jpg", tint: "#ffb169" },
+  { name: "StonkBrokers", x: "", group: "community", chain: "robinhood", contract: "0x4dfe39fffbd2f2ff6b2a9a38c55d33af2847cf1c", limit: 50, logo: "/communities/stonkbrokers.jpg", tint: "#ff8a3d" },
   { name: "Normies", x: "normiesART", group: "community", chain: "ethereum", contract: "0x9eb6e2025b64f340691e424b7fe7022ffde12438", limit: 50, logo: "/communities/normies.jpg", tint: "#f5f3ff" },
 ];
 
@@ -72,7 +76,7 @@ export type WlStats = { claimed: number; cap: number; pausedAt?: number; by: Rec
 
 // Filled in for their comment on the pinned post
 // How the community is tagged: "@pudgypenguins", or "Argonauts by @lphaCentauriKid" when the handle is the artist's
-export const tagOf = (c: Community) => (c.name === "Argonauts" ? `Argonauts by @${c.x}` : `@${c.x}`);
+export const tagOf = (c: Community) => (!c.x ? c.name : c.name === "Argonauts" ? `Argonauts by @${c.x}` : `@${c.x}`);
 export const claimText = (c: Community) => `Just claimed my Waddle List spot through ${tagOf(c)} 🐧\n\nSee you at the free mint, @${X_HANDLE}`;
 
 export type WaddleList = {
