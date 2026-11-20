@@ -58,6 +58,10 @@ export const WL_CAP = COMMUNITIES.reduce((n, c) => n + c.limit, 0);
 export const PAUSE_AT = WL_CAP;
 // The most spots that can be claimed right now
 export const OPEN_CAP = Math.min(WL_CAP, PAUSE_AT);
+// Waddle List claims close for good at this moment (Sunday 22 Nov, 8:00 AM PST). Change it to move the deadline.
+export const CLAIMS_END = Date.parse("2026-11-22T16:00:00Z");
+export const claimsOpen = (now = Date.now()) => now < CLAIMS_END;
+export const CLOSED_MSG = `Waddle List claims are closed. Follow @${X_HANDLE} for the free mint.`;
 export const PAUSED_MSG = `Claims are paused at ${OPEN_CAP.toLocaleString("en-US")} spots for now. Follow @${X_HANDLE} for when they reopen.`;
 
 export const limitOf = (name: string) => COMMUNITIES.find((c) => c.name === name)?.limit ?? 0;

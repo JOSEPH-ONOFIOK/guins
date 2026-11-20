@@ -4,7 +4,7 @@ import { cached } from "@/lib/cache";
 import { WALLET, X_HANDLE, toPublic } from "@/lib/entry";
 import { checkHoldings, wlClaimedCount, wlCommunityCounts, wlConfirm, wlStats, wlWalletOwner } from "@/lib/holdings";
 import { store } from "@/lib/store";
-import { OPEN_CAP, PAUSED_MSG, WADDLE_POST_ID, WL_CAP, limitOf, wlTasksDone } from "@/lib/waddle";
+import { CLOSED_MSG, OPEN_CAP, PAUSED_MSG, WADDLE_POST_ID, WL_CAP, claimsOpen, limitOf, wlTasksDone } from "@/lib/waddle";
 import { verifyClaimComment } from "@/lib/xpost";
 
 // GET → { claimed, cap, by } for the meter
@@ -60,6 +60,8 @@ async function run(req: Request) {
   const wl = (entry.wl ??= {});
 
   if (wl.claimedAt) return Response.json({ entry: toPublic(entry) });
+  // After the deadline nobody new gets in; anyone already claimed is answered above
+  if (!claimsOpen()) return bad(CLOSED_MSG, 403);
 
   switch (body.step) {
     case "wallet": {

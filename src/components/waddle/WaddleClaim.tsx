@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { WALLET, X_HANDLE, X_URL, type PublicEntry } from "@/lib/entry";
-import { OG, OPEN_CAP, PAUSED_MSG, WADDLE, WADDLE_POST, WADDLE_POST_ID, WL_CAP, claimText, communityOf, wlTasksDone, type WlStats } from "@/lib/waddle";
+import { CLAIMS_END, CLOSED_MSG, OG, OPEN_CAP, PAUSED_MSG, WADDLE, WADDLE_POST, WADDLE_POST_ID, WL_CAP, claimText, communityOf, wlTasksDone, type WlStats } from "@/lib/waddle";
 import { AUTH_ERRORS } from "../Crew";
 import { Icon } from "../Icon";
 import { ArrowIcon, XIcon } from "../Nav";
@@ -34,6 +34,32 @@ function Step({ n, title, done, children }: { n: number; title: string; done: bo
 const Locked = ({ children = "Check your wallet in step 01 first." }: { children?: ReactNode }) => <p className="text-sm text-dim">🔒 {children}</p>;
 const Err = ({ children }: { children: ReactNode }) => <p className="mt-2 font-mono text-sm text-flame">{children}</p>;
 
+// The clock, ticking once a second (0 until mounted, so the server and browser render the same)
+const tick = (cb: () => void) => {
+  const t = setInterval(cb, 1000);
+  return () => clearInterval(t);
+};
+const nowSec = () => Math.floor(Date.now() / 1000) * 1000;
+function useNow() {
+  return useSyncExternalStore(tick, nowSec, () => 0);
+}
+
+// Time left until claims close, e.g. "1d 23h 05m 09s"
+function Countdown() {
+  const now = useNow();
+  if (!now) return <p className="mt-2 text-xs text-accent">&nbsp;</p>;
+  const left = CLAIMS_END - now;
+  if (left <= 0) return <p className="mt-2 text-xs font-semibold text-flame">Claims are closed.</p>;
+  const s = Math.floor(left / 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const parts = [Math.floor(s / 86400) + "d", pad(Math.floor((s % 86400) / 3600)) + "h", pad(Math.floor((s % 3600) / 60)) + "m", pad(s % 60) + "s"];
+  return (
+    <p className="mt-2 text-xs text-accent">
+      Claims close in <span className="font-mono font-semibold tabular-nums">{parts.join(" ")}</span>
+    </p>
+  );
+}
+
 // Spots gone across every community
 function Meter({ stats }: { stats: WlStats | null }) {
   const cap = stats?.cap ?? WL_CAP;
@@ -60,9 +86,7 @@ function Meter({ stats }: { stats: WlStats | null }) {
           style={{ width: stats ? `${Math.max((claimed / cap) * 100, claimed ? 1.5 : 0)}%` : "0%" }}
         />
       </div>
-      <p className="mt-2 text-xs text-accent">
-        Sorry about the hiccup earlier: claiming is fixed. If it errored for you, tap Confirm my spot again.
-      </p>
+      <Countdown />
       {/* Every community: pfp with its name beside it, the OG frens first */}
       {/* One swipeable row on phones, so the claim card stays close; wraps from sm up */}
       <ul className="-mx-5 mt-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
@@ -147,6 +171,9 @@ export function WaddleClaim() {
   }, [claimed]);
 
   const full = !!stats && stats.claimed >= stats.cap;
+  // Past the deadline (CLAIMS_END in lib/waddle.ts)
+  const now = useNow();
+  const closed = !!now && now >= CLAIMS_END;
   // Claims paused for now (PAUSE_AT in lib/waddle.ts)
   const paused = !!stats && !full && stats.claimed >= (stats.pausedAt ?? OPEN_CAP);
 
@@ -289,6 +316,12 @@ export function WaddleClaim() {
                       <p className="mt-0.5 font-mono text-sm break-all">{wl?.wallet}</p>
                     </div>
                     <p className="mt-4 text-sm text-dim">See you at mint. Watch @{X_HANDLE} for the date.</p>
+                  </div>
+                ) : closed ? (
+                  <div>
+                    <p className="label label-accent">Waddle List</p>
+                    <h2 className="mt-3 font-display text-4xl leading-none font-bold">Claims are closed.</h2>
+                    <p className="mt-3 text-dim">{CLOSED_MSG}</p>
                   </div>
                 ) : full ? (
                   <div>
