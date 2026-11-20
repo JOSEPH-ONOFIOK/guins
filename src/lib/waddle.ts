@@ -47,7 +47,7 @@ export const COMMUNITIES: Community[] = [
   { name: "Bored Ape Yacht Club", x: "BoredApeYC", group: "community", chain: "ethereum", contract: "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d", limit: 50, logo: "/communities/bayc.jpg", tint: "#b8a14a" },
   { name: "Funkari", x: "FunkariNft", group: "community", chain: "ethereum", contract: "0x1fafd33d882e1c275c61066019a23c1999b5006e", limit: 50, logo: "/communities/funkari.jpg", tint: "#f5f3ff" },
   { name: "CannaCats", x: "CannaCatMeme", group: "community", chain: "robinhood", contract: "0x289c8ce652f38029867842048068b39bd0464a3f", limit: 50, logo: "/communities/cannacats.jpg", tint: "#ffb169" },
-  { name: "StonkBrokers", x: "", group: "community", chain: "robinhood", contract: "0x4dfe39fffbd2f2ff6b2a9a38c55d33af2847cf1c", limit: 50, logo: "/communities/stonkbrokers.jpg", tint: "#ff8a3d" },
+  { name: "StonkBrokers", x: "", group: "community", chain: "robinhood", contract: "0x539cdd042c2f3d93ebc5be7dfff0c79f3b4fabf0", limit: 50, logo: "/communities/stonkbrokers.jpg", tint: "#ff8a3d" },
   { name: "Normies", x: "normiesART", group: "community", chain: "ethereum", contract: "0x9eb6e2025b64f340691e424b7fe7022ffde12438", limit: 50, logo: "/communities/normies.jpg", tint: "#f5f3ff" },
 ];
 
