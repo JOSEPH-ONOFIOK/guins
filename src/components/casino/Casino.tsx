@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "../Icon";
 import { ChainLock } from "./ChainLock";
 import { useEffect, useRef, useState } from "react";
-import { CASINO_OPENS, CASINO_POSTPONED, MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { CASINO_OPENS, CASINO_POSTPONED, POSTPONED_LABEL, MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { fmtLeft, useNow } from "@/lib/clock";
 import { CoinFlip, FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, FourSeconds } from "./FourSeconds";
@@ -147,7 +147,7 @@ export function Casino() {
 
       {/* The table */}
       <div className="felt relative mx-3 rounded-[22px] px-4 py-6 sm:mx-4 sm:px-8">
-        {GAMES_LOCKED && <ChainLock label={!FORCE_LOCK && now && now < CASINO_OPENS ? `Opens in ${fmtLeft(CASINO_OPENS - now)}` : "Coming soon"} />}
+        {GAMES_LOCKED && <ChainLock label={!FORCE_LOCK && now && now < CASINO_OPENS ? `Opens in ${fmtLeft(CASINO_OPENS - now)}` : CASINO_POSTPONED ? POSTPONED_LABEL : "Coming soon"} />}
         {/* While locked the game shows but its buttons are off */}
         <Game bet={bet} busy={busy || GAMES_LOCKED} start={start} settle={settle} />
         {GAMES_LOCKED && <p className="sr-only">This game isn&apos;t open yet.</p>}
