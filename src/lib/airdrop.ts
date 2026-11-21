@@ -19,7 +19,7 @@ export const refLink = (handle: string) => `${host}/rpeng?ref=${handle}`;
 // Filled in for their quote post. It must keep their invite link: the quote is checked for it.
 // hasPost: they're quoting the airdrop post, so no need to tag us in the text
 export const qrtText = (handle: string, xHandle: string, hasPost: boolean) =>
-  `THE COLD BLOCK IS OPENING.\n\n$RPENG → November 21 · 3PM UTC\n\nColony Casino → November 21 · 3:30PM UTC\n\n3,333 Guins FREE MINT → November 23\n\nRobinhood × @opensea\n\nSee you inside → ${refLink(handle)}${hasPost ? "" : `\n\n@${xHandle}`}`;
+  `Just secured my share of $RPENG 🐧\n\n${AIRDROP_SHARE} of the supply goes back to The Colony. Four steps and a wallet, that's it.\n\nGet yours → ${refLink(handle)}${hasPost ? "" : `\n\n@${xHandle}`}`;
 
 export type Airdrop = {
   followed?: boolean;
