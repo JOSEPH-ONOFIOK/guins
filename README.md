@@ -2,7 +2,7 @@
 
 The Guins site: [www.hoodguin.xyz](https://www.hoodguin.xyz). Whitelist application
 (sign in with X, then the tasks), the gang line-up, and `/rpeng` with the $RPENG
-airdrop, The Colony Casino (locked for now) and the game wiki.
+airdrop, The Colony Casino and the game wiki.
 
 ```bash
 npm install
@@ -83,7 +83,7 @@ re-reads them within 30 seconds. The sheet needs `Code.gs` version 2 deployed
 - Post links: use `/admin` (above). The values in the code are only the fallback:
   `PINNED_POST` in [src/lib/entry.ts](src/lib/entry.ts) and `AIRDROP_POST` in [src/lib/airdrop.ts](src/lib/airdrop.ts).
 - `AIRDROP_SHARE` in [src/lib/airdrop.ts](src/lib/airdrop.ts): how much of $RPENG the airdrop gives back.
-- `GAMES_LOCKED` in [src/components/casino/Casino.tsx](src/components/casino/Casino.tsx): set to `false` to open the casino.
+- `CASINO_OPENS` in [src/lib/rpeng.ts](src/lib/rpeng.ts): when The Colony Casino unlocks itself. `FORCE_LOCK` in [src/components/casino/Casino.tsx](src/components/casino/Casino.tsx) chains it up again.
 - `RATE` in [src/lib/rpeng.ts](src/lib/rpeng.ts): the $RPENG ↔ dollar reference rate.
 
 ## Sharing and icons

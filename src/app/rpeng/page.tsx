@@ -9,10 +9,11 @@ import { ArrowIcon, Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { Scene } from "@/components/Scene";
 import { Casino } from "@/components/casino/Casino";
+import { CasinoLabel } from "@/components/casino/CasinoLabel";
 
 const DESC = AIRDROP_OPEN
-  ? "The colony's gold. Apply for the $RPENG airdrop and preview The Colony Casino: Coin Flip, 4 Seconds, Over/Under 7 and Guin Slots, coming soon."
-  : "The colony's gold. Preview The Colony Casino: Coin Flip, 4 Seconds, Over/Under 7 and Guin Slots, coming soon.";
+  ? "The colony's gold. Apply for the $RPENG airdrop and play The Colony Casino: Coin Flip, 4 Seconds, Over/Under 7 and Guin Slots."
+  : "The colony's gold. Play The Colony Casino: Coin Flip, 4 Seconds, Over/Under 7 and Guin Slots.";
 const SHARE = { url: "/og-rpeng.png", width: 1200, height: 630, alt: "$RPENG: the colony's gold" };
 export const metadata: Metadata = {
   title: AIRDROP_OPEN ? "$RPENG · Airdrop & The Colony Casino" : "$RPENG · The Colony Casino",
@@ -81,7 +82,7 @@ export default function RpengPage() {
           <section id="play" className="mx-auto mt-12 max-w-5xl scroll-mt-24 px-4 pb-16 sm:px-8">
             <Reveal className="mb-6 flex items-center justify-between gap-6">
               <div>
-                <p className="label label-accent">The Colony Casino · coming soon</p>
+                <CasinoLabel />
                 <h2 className="mt-2 font-display text-[clamp(2rem,5vw,3.2rem)] leading-none font-bold uppercase">Flip. Stop. Roll. Spin.</h2>
               </div>
               <GoldMedallion delay={2.4} tilt={-3} className="hidden w-24 shrink-0 sm:block" />

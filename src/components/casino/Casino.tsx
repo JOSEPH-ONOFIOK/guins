@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Icon, type IconName } from "../Icon";
 import { ChainLock } from "./ChainLock";
 import { useEffect, useRef, useState } from "react";
-import { MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { CASINO_OPENS, MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { fmtLeft, useNow } from "@/lib/clock";
 import { CoinFlip, FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, FourSeconds } from "./FourSeconds";
 import { OU_PAYS, OverUnder } from "./OverUnder";
@@ -28,13 +29,16 @@ const CHIP_COLOR: Record<number, string> = {
   100_000_000: "bg-[#17123d] text-[#ffcf3f]",
 };
 
-// Flip to false to open the tables
-export const GAMES_LOCKED = true;
+// Locked until CASINO_OPENS (lib/rpeng.ts); set FORCE_LOCK to true to chain the tables up again
+const FORCE_LOCK = false;
 
 const KEY = "guins_casino_v1";
 type Result = { id: number; game: string; bet: number; net: number; note: string };
 
 export function Casino() {
+  // Chained up until it opens (and while the clock hasn't started, so nothing is playable on first paint)
+  const now = useNow();
+  const GAMES_LOCKED = FORCE_LOCK || !now || now < CASINO_OPENS;
   const [balance, setBalance] = useState(START_CHIPS);
   const [loaded, setLoaded] = useState(false);
   const [bet, setBet] = useState(5_000_000);
@@ -143,10 +147,10 @@ export function Casino() {
 
       {/* The table */}
       <div className="felt relative mx-3 rounded-[22px] px-4 py-6 sm:mx-4 sm:px-8">
-        {GAMES_LOCKED && <ChainLock />}
+        {GAMES_LOCKED && <ChainLock label={!FORCE_LOCK && now && now < CASINO_OPENS ? `Opens in ${fmtLeft(CASINO_OPENS - now)}` : "Coming soon"} />}
         {/* While locked the game shows but its buttons are off */}
         <Game bet={bet} busy={busy || GAMES_LOCKED} start={start} settle={settle} />
-        {GAMES_LOCKED && <p className="sr-only">This game is coming soon. It can&apos;t be played yet.</p>}
+        {GAMES_LOCKED && <p className="sr-only">This game isn&apos;t open yet.</p>}
         <div className="mt-5 min-h-14 text-center" aria-live="polite">
           {warn && <p className="pop-in font-mono text-sm text-flame">{warn}</p>}
           {flash && (

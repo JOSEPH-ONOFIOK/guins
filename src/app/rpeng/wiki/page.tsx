@@ -26,7 +26,7 @@ export default function WikiPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link href="/rpeng" className="chip transition hover:border-accent">← Back to The Colony Casino</Link>
             <Link href="/rpeng#play" className="btn btn-accent btn-sm">
-              Games coming soon <ArrowIcon />
+              Play the games <ArrowIcon />
             </Link>
           </div>
           <header className="mt-10">
