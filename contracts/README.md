@@ -37,7 +37,7 @@ export ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com
 export RPENG_TOKEN=0x…            # the $RPENG token
 export CASINO_OWNER=0xb50295336dCf30F5a01541338AD09B4487930065      # owner: the $RPENG launch wallet (default)
 export CASINO_TREASURY=0x73b6e7E744576DD2AC8110d9D1291eE843FA6d30   # treasury: the default if unset
-export CASINO_CROUPIER=0x…        # address of CROUPIER_KEY below (a fresh hot wallet)
+export CASINO_CROUPIER=0xD1d196aD626383592b6357614510b333868A3FAA   # croupier (default); its key goes in CROUPIER_KEY
 export CASINO_MIN_BET=1000000000000000000000      # 1,000 $RPENG (default)
 export CASINO_MAX_BET=100000000000000000000000    # 100,000 $RPENG (default)
 forge script script/Deploy.s.sol --root . --rpc-url robinhood --broadcast --account <deployer>

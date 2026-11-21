@@ -14,7 +14,8 @@ contract Deploy is Script {
         address owner = vm.envOr("CASINO_OWNER", address(0xb50295336dCf30F5a01541338AD09B4487930065));
         // Gets the treasury share of every lost bet (set CASINO_TREASURY to use another wallet)
         address treasury = vm.envOr("CASINO_TREASURY", address(0x73b6e7E744576DD2AC8110d9D1291eE843FA6d30));
-        address croupier = vm.envAddress("CASINO_CROUPIER");
+        // The server's wallet that posts and reveals seeds (set CASINO_CROUPIER to use another)
+        address croupier = vm.envOr("CASINO_CROUPIER", address(0xD1d196aD626383592b6357614510b333868A3FAA));
         uint256 lossBps = vm.envOr("CASINO_LOSS_TO_TREASURY_BPS", uint256(7000));
         // In whole tokens times 1e18: 1,000 to 100,000 $RPENG per bet
         uint256 minBet = vm.envOr("CASINO_MIN_BET", uint256(1_000e18));
