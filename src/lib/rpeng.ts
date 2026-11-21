@@ -8,9 +8,9 @@ export const RATE_KNOWN = false;
 export const RATE = { tokens: 100_000_000, usd: 2 };
 export const USD_PER_TOKEN = RATE.usd / RATE.tokens;
 
-// The Colony Casino opens itself at this moment (Sat 21 Nov, 5:10 PM PST = Sun 22 Nov, 01:10 UTC): before it the
+// The Colony Casino opens itself at this moment (Sat 21 Nov, 5:20 PM WAT = 16:20 UTC): before it the
 // tables are chained up with a countdown. No redeploy needed when it passes.
-export const CASINO_OPENS = Date.parse("2026-11-22T01:10:00Z");
+export const CASINO_OPENS = Date.parse("2026-11-21T16:20:00Z");
 
 // Play chips: everyone starts with this, and can top back up to it when they run dry
 export const START_CHIPS = 100_000_000;
