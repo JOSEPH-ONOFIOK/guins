@@ -34,11 +34,11 @@ forge test --root .
 
 export ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com
 export RPENG_TOKEN=0x2caD50ca2A7BeB6A314D8e2B5b26775aB09E3aD1   # $RPENG
-export CASINO_OWNER=0x…           # a multisig is best
+export CASINO_OWNER=0xb50295336dCf30F5a01541338AD09B4487930065      # owner: the $RPENG launch wallet (default)
 export CASINO_TREASURY=0x73b6e7E744576DD2AC8110d9D1291eE843FA6d30   # treasury: the default if unset
 export CASINO_CROUPIER=0x…        # address of CROUPIER_KEY below (a fresh hot wallet)
-export CASINO_MIN_BET=…           # in the token's smallest unit (18 decimals: 1 token = 1e18)
-export CASINO_MAX_BET=…
+export CASINO_MIN_BET=1000000000000000000000      # 1,000 $RPENG (default)
+export CASINO_MAX_BET=100000000000000000000000    # 100,000 $RPENG (default)
 forge script script/Deploy.s.sol --root . --rpc-url robinhood --broadcast --account <deployer>
 ```
 
@@ -46,7 +46,8 @@ Then:
 
 1. **Fund the bankroll**: approve the casino, then call `fundBankroll(amount)`. A bet only
    goes through if the free bankroll covers its maximum win (50× for slots), so size the
-   bankroll and `maxBet` together: bankroll ≥ 50 × maxBet lets any single bet through.
+   bankroll and `maxBet` together: bankroll ≥ 50 × maxBet lets any single bet through: with a 100,000 max bet, that's
+   5,000,000 $RPENG. A smaller bankroll still works; big slots bets are refused until it grows.
 2. **Give the croupier gas**: send a little ETH on Robinhood Chain to `CASINO_CROUPIER`.
 3. **Site settings** (Vercel → Environment Variables, then redeploy):
 

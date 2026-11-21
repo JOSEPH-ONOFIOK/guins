@@ -10,13 +10,15 @@ import {RpengCasino} from "../src/RpengCasino.sol";
 contract Deploy is Script {
     function run() external returns (RpengCasino casino) {
         IERC20 token = IERC20(vm.envOr("RPENG_TOKEN", address(0x2caD50ca2A7BeB6A314D8e2B5b26775aB09E3aD1)));
-        address owner = vm.envAddress("CASINO_OWNER");
+        // The wallet that launched $RPENG (set CASINO_OWNER to use another)
+        address owner = vm.envOr("CASINO_OWNER", address(0xb50295336dCf30F5a01541338AD09B4487930065));
         // Gets the treasury share of every lost bet (set CASINO_TREASURY to use another wallet)
         address treasury = vm.envOr("CASINO_TREASURY", address(0x73b6e7E744576DD2AC8110d9D1291eE843FA6d30));
         address croupier = vm.envAddress("CASINO_CROUPIER");
         uint256 lossBps = vm.envOr("CASINO_LOSS_TO_TREASURY_BPS", uint256(7000));
-        uint256 minBet = vm.envUint("CASINO_MIN_BET");
-        uint256 maxBet = vm.envUint("CASINO_MAX_BET");
+        // In whole tokens times 1e18: 1,000 to 100,000 $RPENG per bet
+        uint256 minBet = vm.envOr("CASINO_MIN_BET", uint256(1_000e18));
+        uint256 maxBet = vm.envOr("CASINO_MAX_BET", uint256(100_000e18));
         uint64 timeout = uint64(vm.envOr("CASINO_REVEAL_TIMEOUT", uint256(1 hours)));
 
         vm.startBroadcast();
