@@ -4,8 +4,7 @@
 Robinhood Chain (id 4663). 4 Seconds stays on play chips: its timing happens in the
 player's browser, so it can't be made fair for real money.
 
-The site shows the **Real $RPENG** tables only when `NEXT_PUBLIC_CASINO_CONTRACT` and
-`NEXT_PUBLIC_RPENG_TOKEN` are set. Until then everything is play chips, as before.
+The site shows the **Real $RPENG** tables only when `NEXT_PUBLIC_CASINO_CONTRACT` is set. Until then everything is play chips, as before.
 
 ## How a bet works
 
@@ -34,8 +33,8 @@ cd contracts
 forge test --root .
 
 export ROBINHOOD_RPC_URL=https://rpc.mainnet.chain.robinhood.com
-export RPENG_TOKEN=0x…            # the $RPENG token
-export CASINO_OWNER=0xb50295336dCf30F5a01541338AD09B4487930065      # owner: the $RPENG launch wallet (default)
+export RPENG_TOKEN=0xFd6EeA2AC505cDB7511a7d1ead83D8ce4277C786   # $RPENG (default)
+export CASINO_OWNER=0xCEBFB1e29be7d38F0255d487De1D63fe80de2c2A      # owner: the $RPENG launch wallet (default)
 export CASINO_TREASURY=0x73b6e7E744576DD2AC8110d9D1291eE843FA6d30   # treasury: the default if unset
 export CASINO_CROUPIER=0xD1d196aD626383592b6357614510b333868A3FAA   # croupier (default); its key goes in CROUPIER_KEY
 export CASINO_MIN_BET=1000000000000000000000      # 1,000 $RPENG (default)
@@ -55,7 +54,7 @@ Then:
 | Name | Value |
 | --- | --- |
 | `NEXT_PUBLIC_CASINO_CONTRACT` | the deployed casino |
-| `NEXT_PUBLIC_RPENG_TOKEN` | the $RPENG token |
+| `NEXT_PUBLIC_RPENG_TOKEN` | optional: defaults to $RPENG, `0xFd6E…C786` |
 | `CROUPIER_KEY` | private key of `CASINO_CROUPIER` |
 | `CROUPIER_SEED` | 32 random bytes: `openssl rand -hex 32` with `0x` in front |
 | `ROBINHOOD_RPC_URL` | optional, a private RPC |
@@ -89,6 +88,17 @@ Checked and covered by tests:
 - Changing the timeout never affects open bets (each stores its own deadline).
 - Settings are bounded (loss split ≤ 100%, timeout 5 minutes to 1 day, min ≤ max).
 - Slots payouts match the site exactly (all 8,000 outcomes, 96.525% return).
+
+The real token, `0xFd6EeA2AC505cDB7511a7d1ead83D8ce4277C786` ("rpeng" / RPENG) on Robinhood Chain:
+
+- A plain ERC-20 with `burn`/`burnFrom`, made by a launchpad (`launchFactory()`, bonding
+  `curve()`). No owner, no mint, no pause, no blacklist, no transfer fee setting, and not
+  an upgradeable proxy, so nobody can change how it behaves later. About 870M of the 1B
+  supply still sits in the bonding curve.
+- `test/RpengFork.t.sol` runs the casino against it on a copy of the chain: transfers
+  arrive in full (no fee), wins pay 1.95x, a loss sends exactly 70% to the treasury and 30%
+  to `0x…dEaD`, and a timeout pays the maximum. Run it with
+  `forge test --root . --match-contract RpengFork --fork-url https://rpc.mainnet.chain.robinhood.com`.
 
 Risks that remain (by design or out of the contract's hands):
 
