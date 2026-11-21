@@ -9,7 +9,7 @@ import {RpengCasino} from "../src/RpengCasino.sol";
 /// Settings come from the environment (see contracts/README.md).
 contract Deploy is Script {
     function run() external returns (RpengCasino casino) {
-        IERC20 token = IERC20(vm.envOr("RPENG_TOKEN", address(0x2caD50ca2A7BeB6A314D8e2B5b26775aB09E3aD1)));
+        IERC20 token = IERC20(vm.envAddress("RPENG_TOKEN"));
         // The wallet that launched $RPENG (set CASINO_OWNER to use another)
         address owner = vm.envOr("CASINO_OWNER", address(0xb50295336dCf30F5a01541338AD09B4487930065));
         // Gets the treasury share of every lost bet (set CASINO_TREASURY to use another wallet)
