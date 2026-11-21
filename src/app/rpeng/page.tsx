@@ -10,6 +10,8 @@ import { Reveal } from "@/components/Reveal";
 import { Scene } from "@/components/Scene";
 import { Casino } from "@/components/casino/Casino";
 import { CasinoLabel } from "@/components/casino/CasinoLabel";
+import { RealPlay } from "@/components/casino/RealPlay";
+import { REAL_PLAY } from "@/casino/chain";
 
 const DESC = AIRDROP_OPEN
   ? "The colony's gold. Apply for the $RPENG airdrop and play The Colony Casino: Coin Flip, 4 Seconds, Over/Under 7 and Guin Slots."
@@ -90,6 +92,12 @@ export default function RpengPage() {
             <Reveal>
               <Casino />
             </Reveal>
+            {/* Real-$RPENG tables: only once the casino contract and token are set */}
+            {REAL_PLAY && (
+              <Reveal className="mt-8">
+                <RealPlay />
+              </Reveal>
+            )}
           </section>
         </div>
       </main>

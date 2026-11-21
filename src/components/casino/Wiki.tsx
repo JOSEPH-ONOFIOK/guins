@@ -7,6 +7,7 @@ import { FOUR_TIERS, TARGET } from "./FourSeconds";
 import { OU_PAYS } from "./OverUnder";
 import { Icon, type IconName } from "../Icon";
 import { Rules } from "./Rules";
+import { REAL_PLAY } from "@/casino/chain";
 import { PAIR_PAYS, SYMBOLS } from "./Slots";
 
 // The Colony Casino wiki: one article per game plus a glossary and FAQ.
@@ -75,7 +76,11 @@ const ARTICLES: Article[] = [
     title: "Getting started",
     body: (
       <>
-        <p>The Colony Casino is where Guins kill time while they wait for $RPENG. You play with free <b>play chips</b>, not real tokens, so nothing here costs or pays real money.</p>
+        {REAL_PLAY ? (
+          <p>The Colony Casino has two kinds of table. The play tables use free <b>play chips</b> that cost nothing and pay nothing. The <b>Real $RPENG</b> tables use real tokens from your wallet: wins pay real $RPENG, and a lost bet is gone.</p>
+        ) : (
+          <p>The Colony Casino is where Guins kill time while they wait for $RPENG. You play with free <b>play chips</b>, not real tokens, so nothing here costs or pays real money.</p>
+        )}
         <H>Your first round</H>
         <ol className="grid list-decimal gap-1.5 pl-5">
           <li>You start with <b>{fmtTok(START_CHIPS)}</b> play chips{RATE_KNOWN && ` (≈ ${fmtUsd(START_CHIPS)})`}.</li>
@@ -234,9 +239,11 @@ const ARTICLES: Article[] = [
     body: (
       <div className="grid gap-2">
         {[
-          ["Are these real $RPENG?", "No. Chips are play money for fun. They can't be bought, withdrawn, swapped or cashed out, and they have nothing to do with real $RPENG."],
+          REAL_PLAY
+            ? ["Are these real $RPENG?", "The play tables use free chips: play money that can't be bought, withdrawn or cashed out. The Real $RPENG tables are different: you bet real tokens and can lose them. A lost bet stays with the house, and 30% of it is burned. Wins pay the same as on the play tables."]
+            : ["Are these real $RPENG?", "No. Chips are play money for fun. They can't be bought, withdrawn, swapped or cashed out, and they have nothing to do with real $RPENG."],
           ["Where is my balance saved?", "In this browser only. Clearing site data, a private window or another device starts you fresh."],
-          ["Is it rigged?", "Every result comes from your browser's secure random number generator, the same kind used for passwords. The odds in this wiki are exact."],
+          ["Is it rigged?", REAL_PLAY ? "Play tables use your browser's secure random number generator. Real $RPENG bets are provably fair: the house locks in a hidden seed before you bet, you add your own, and the result comes from both, so neither side can steer it. If the house doesn't reveal its seed within an hour, you can claim the most your bet could have paid. The odds in this wiki are exact." : "Every result comes from your browser's secure random number generator, the same kind used for passwords. The odds in this wiki are exact."],
           ["Can I lose more than my balance?", "No. You can't bet more than you have, and you can top up whenever you drop under the minimum bet."],
           RATE_KNOWN
             ? ["Why do dollar values look so small?", `$RPENG has a huge supply, so each token is worth a tiny fraction of a cent at the reference rate: 1M ≈ ${fmtUsd(1_000_000)}.`]
