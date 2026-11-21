@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "../Icon";
 import { ChainLock } from "./ChainLock";
 import { useEffect, useRef, useState } from "react";
-import { CASINO_OPENS, MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
+import { CASINO_OPENS, CASINO_POSTPONED, MIN_BET, RATE_KNOWN, START_CHIPS, fmtTok, fmtUsd } from "@/lib/rpeng";
 import { fmtLeft, useNow } from "@/lib/clock";
 import { CoinFlip, FLIP_PAYS } from "./CoinFlip";
 import { FOUR_TIERS, FourSeconds } from "./FourSeconds";
@@ -30,7 +30,7 @@ const CHIP_COLOR: Record<number, string> = {
 };
 
 // Locked until CASINO_OPENS (lib/rpeng.ts); set FORCE_LOCK to true to chain the tables up again
-const FORCE_LOCK = false;
+const FORCE_LOCK = CASINO_POSTPONED;
 
 const KEY = "guins_casino_v1";
 type Result = { id: number; game: string; bet: number; net: number; note: string };
